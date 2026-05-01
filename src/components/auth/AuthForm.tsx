@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, signUp, resetPassword } from "@/lib/supabase";
+import TermsModal from "./TermsModal";
 
 type Tab = "login" | "register";
 type View = "form" | "forgot";
@@ -72,6 +73,9 @@ export default function AuthForm() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotEmailError, setForgotEmailError] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -131,6 +135,7 @@ export default function AuthForm() {
     const errors = validateRegister(form);
     setFieldErrors(errors);
     setTouched({ nombre: true, apellidos: true, email: true, password: true, passwordConfirm: true });
+    if (!termsAccepted) { setTermsError(true); return; }
     if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
@@ -207,6 +212,7 @@ export default function AuthForm() {
   }
 
   return (
+    <>
     <div className="bg-white rounded-2xl border border-slate-200 p-6 w-full max-w-sm mx-auto">
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl mb-6">
         <button
@@ -332,6 +338,45 @@ export default function AuthForm() {
               placeholder="••••••••"
             />
           </Field>
+          {/* Terms checkbox */}
+          <div className="space-y-1">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => {
+                  setTermsAccepted(e.target.checked);
+                  if (e.target.checked) setTermsError(false);
+                }}
+                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-400 flex-shrink-0"
+              />
+              <span className="text-xs text-slate-600 leading-relaxed">
+                He leído y acepto los{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowTerms(true)}
+                  className="text-primary-600 underline hover:text-primary-700 transition-colors"
+                >
+                  Términos de Uso
+                </button>
+                {" "}y la{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowTerms(true)}
+                  className="text-primary-600 underline hover:text-primary-700 transition-colors"
+                >
+                  Política de Privacidad
+                </button>
+                , incluyendo el envío de mis datos de salud a Groq para generar el plan de entrenamiento.
+              </span>
+            </label>
+            {termsError && (
+              <p className="text-xs text-red-600">
+                Debes aceptar los términos y la política de privacidad para continuar.
+              </p>
+            )}
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -342,6 +387,9 @@ export default function AuthForm() {
         </form>
       )}
     </div>
+
+    {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+    </>
   );
 }
 
@@ -440,8 +488,14 @@ function PasswordStrength({ password }: { password: string }) {
 
 function traducirError(msg: string): string {
   if (msg.includes("Invalid login credentials")) return "Email o contraseña incorrectos";
-  if (msg.includes("Email not confirmed")) return "Confirma tu email antes de entrar";
+  if (msg.includes("Email not confirmed")) return "Confirma tu email antes de entrar. Revisa tu bandeja de entrada.";
   if (msg.includes("User already registered")) return "Ya existe una cuenta con este email";
   if (msg.includes("Password should be")) return "La contraseña debe tener al menos 8 caracteres";
-  return msg;
+  if (msg.includes("over_email_send_rate_limit") || msg.includes("rate limit") || msg.includes("too many requests"))
+    return "Demasiados intentos seguidos. Espera unos minutos e inténtalo de nuevo.";
+  if (msg.includes("signup_disabled")) return "El registro está temporalmente desactivado.";
+  if (msg.includes("Email link is invalid or has expired")) return "El enlace ha caducado. Solicita uno nuevo.";
+  if (msg.includes("Token has expired")) return "La sesión ha caducado. Vuelve a iniciar sesión.";
+  if (msg.includes("network") || msg.includes("fetch")) return "Error de conexión. Comprueba tu internet e inténtalo de nuevo.";
+  return "Ha ocurrido un error. Inténtalo de nuevo.";
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { OnboardingData, PlanEntrenamiento } from "@/types/plan";
 import { savePlan, updateProfile } from "@/lib/db";
+import { getSessionToken } from "@/lib/supabase";
 import Step1 from "./Step1";
 import Step2 from "./Step2";
 import Step3 from "./Step3";
@@ -26,13 +27,29 @@ export default function OnboardingForm({ onPlanCreated }: Props) {
     setError(null);
 
     try {
-      const res = await fetch("/api/plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const token = await getSessionToken();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 65_000);
 
-      if (!res.ok) throw new Error("Error generando el plan");
+      let res: Response;
+      try {
+        res = await fetch("/api/plan", {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(formData),
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Error generando el plan");
+      }
 
       const data = await res.json();
       const planGenerado: PlanEntrenamiento = data.plan;

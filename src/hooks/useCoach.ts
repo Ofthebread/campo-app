@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { PlanEntrenamiento } from "@/types/plan";
+import { getSessionToken } from "@/lib/supabase";
 
 export interface CoachMessage {
   id: string;
@@ -30,17 +31,33 @@ export function useCoach(planContext?: string) {
     setMessages((prev) => [...prev, userMsg]);
 
     try {
-      const res = await fetch("/api/coach", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          history: messages.map((m) => ({ role: m.role, content: m.content })),
-          planContext,
-        }),
-      });
+      const token = await getSessionToken();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 50_000);
 
-      if (!res.ok) throw new Error("Error al contactar al coach");
+      let res: Response;
+      try {
+        res = await fetch("/api/coach", {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            message: text,
+            history: messages.map((m) => ({ role: m.role, content: m.content })),
+            planContext,
+          }),
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error ?? "Error al contactar al coach");
+      }
 
       const data = await res.json();
 
@@ -54,7 +71,11 @@ export function useCoach(planContext?: string) {
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      if (err instanceof Error && err.name === "AbortError") {
+        setError("El coach tardó demasiado en responder. Inténtalo de nuevo.");
+      } else {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      }
     } finally {
       setLoading(false);
     }

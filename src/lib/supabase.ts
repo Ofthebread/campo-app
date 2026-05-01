@@ -17,7 +17,7 @@ export async function signUp(
   if (data.user) {
     await supabase
       .from("profiles")
-      .upsert({ id: data.user.id, nombre, apellidos, email });
+      .upsert({ id: data.user.id, nombre, apellidos, email, terminos_aceptados_at: new Date().toISOString() });
   }
 
   return data;
@@ -36,6 +36,11 @@ export async function signOut() {
 export async function getUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
+}
+
+export async function getSessionToken(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token ?? null;
 }
 
 export async function resetPassword(email: string) {

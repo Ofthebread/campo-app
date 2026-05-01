@@ -77,7 +77,7 @@ export async function setActivePlan(planId: string): Promise<void> {
 export async function deletePlan(planId: string): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
-  await supabase.from("sesiones_completadas").delete().eq("plan_id", planId);
+  await supabase.from("sesiones_completadas").delete().eq("plan_id", planId).eq("user_id", session.user.id);
   await supabase.from("planes").delete().eq("id", planId).eq("user_id", session.user.id);
 }
 

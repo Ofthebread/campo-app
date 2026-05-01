@@ -1,21 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getRequestUser, unauthorizedResponse, sanitizeForPrompt } from "@/lib/auth-server";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_TIMEOUT_MS = 60_000;
+
+// ── Request schema ────────────────────────────────────────────────────────────
 
 const requestSchema = z.object({
-  objetivo: z.string().min(1),
+  objetivo: z.string().min(1).max(1000),
   volumenCarrera: z.enum(["nada", "menos_20", "20_40", "mas_40"]),
-  lesiones: z.string(),
+  lesiones: z.string().max(500),
   edad: z.number().min(10).max(99),
   peso: z.number().min(30).max(250),
   diasDisponibles: z.number().min(1).max(7),
   duracionMaxSesion: z.enum(["30min", "45min", "1h", "mas_1h"]),
   lugarEntrenamiento: z.enum(["calle", "pista", "cinta", "campo"]),
   tieneDispositivo: z.boolean(),
-  otrosDeportes: z.string(),
+  otrosDeportes: z.string().max(500),
   preferenciaEntrenamiento: z.enum(["corta_intensa", "larga_suave"]),
 });
+
+// ── Response schema (validates what Groq returns) ─────────────────────────────
+
+const ejercicioSchema = z.object({
+  nombre: z.string(),
+  series: z.number().nullable().optional(),
+  repeticiones: z.string().nullable().optional(),
+  duracion: z.string().nullable().optional(),
+  descanso: z.string().nullable().optional(),
+  descripcion: z.string(),
+});
+
+const sesionSchema = z.object({
+  dia: z.string(),
+  tipo: z.string(),
+  duracion: z.number(),
+  calentamiento: z.string(),
+  ejercicios: z.array(ejercicioSchema),
+  vueltaCalma: z.string(),
+  consejos: z.string(),
+});
+
+const semanaSchema = z.object({
+  numero: z.number(),
+  descripcion: z.string(),
+  objetivoSemana: z.string(),
+  sesiones: z.array(sesionSchema),
+});
+
+const planSchema = z.object({
+  titulo: z.string(),
+  objetivo: z.string(),
+  nivel: z.string(),
+  totalSemanas: z.number(),
+  semanas: z.array(semanaSchema).min(1),
+  consejosGenerales: z.array(z.string()),
+  nutricion: z.array(z.string()),
+});
+
+// ── Labels ────────────────────────────────────────────────────────────────────
 
 const VOLUMEN_LABELS: Record<string, string> = {
   nada: "no corre actualmente (punto de partida desde cero)",
@@ -43,10 +87,15 @@ const PREFERENCIA_LABELS: Record<string, string> = {
   larga_suave: "sesiones largas y suaves (prefiere volumen y resistencia)",
 };
 
+// ── Handler ───────────────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
+  // Auth check — reject unauthenticated requests
+  const user = await getRequestUser(req);
+  if (!user) return unauthorizedResponse();
+
   const body = await req.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
-
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
@@ -54,26 +103,31 @@ export async function POST(req: NextRequest) {
   const d = parsed.data;
   const totalSemanas = 8;
 
+  // Sanitize free-text fields before embedding in the prompt
+  const objetivo = sanitizeForPrompt(d.objetivo);
+  const lesiones = sanitizeForPrompt(d.lesiones);
+  const otrosDeportes = sanitizeForPrompt(d.otrosDeportes);
+
   const prompt = `Eres un coach de fitness y running experto. Genera un plan de entrenamiento personalizado en JSON.
 
 Perfil completo del usuario:
-- Objetivo personal: "${d.objetivo}"
+- Objetivo personal: "${objetivo}"
 - Edad: ${d.edad} años
 - Peso: ${d.peso} kg
 - Volumen de carrera actual: ${VOLUMEN_LABELS[d.volumenCarrera]}
-- Lesiones o limitaciones físicas: ${d.lesiones || "ninguna"}
+- Lesiones o limitaciones físicas: ${lesiones || "ninguna"}
 - Días disponibles para entrenar: ${d.diasDisponibles} días por semana
 - Duración máxima por sesión: ${DURACION_LABELS[d.duracionMaxSesion]}
 - Lugar de entrenamiento: ${LUGAR_LABELS[d.lugarEntrenamiento]}
 - Dispone de pulsómetro o Apple Watch: ${d.tieneDispositivo ? "sí, puede entrenar por zonas de frecuencia cardíaca" : "no"}
-- Otros deportes que practica: ${d.otrosDeportes || "ninguno"}
+- Otros deportes que practica: ${otrosDeportes || "ninguno"}
 - Preferencia de entrenamiento: ${PREFERENCIA_LABELS[d.preferenciaEntrenamiento]}
 
 Instrucciones importantes:
 - Diseña exactamente ${d.diasDisponibles} sesiones por semana.
 - Respeta estrictamente la duración máxima por sesión indicada.
 - Adapta los ejercicios al lugar de entrenamiento (${LUGAR_LABELS[d.lugarEntrenamiento]}).
-- ${d.lesiones ? `Ten en cuenta las siguientes limitaciones físicas: ${d.lesiones}. Evita ejercicios que puedan agravar estas condiciones.` : ""}
+- ${d.lesiones ? `Ten en cuenta las siguientes limitaciones físicas: ${lesiones}. Evita ejercicios que puedan agravar estas condiciones.` : ""}
 - ${d.tieneDispositivo ? "Incluye referencias a zonas de frecuencia cardíaca cuando sea útil." : "No menciones zonas de frecuencia cardíaca ni pulsómetro."}
 - El plan debe ser progresivo: cada semana aumenta ligeramente la carga.
 - Adapta la intensidad a la preferencia del usuario: ${PREFERENCIA_LABELS[d.preferenciaEntrenamiento]}.
@@ -119,35 +173,56 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta:
   "nutricion": ["string", "string", "string"]
 }`;
 
-  const response = await fetch(GROQ_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      max_tokens: 8000,
-      temperature: 0.7,
-      response_format: { type: "json_object" },
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error("Groq error:", error);
-    return NextResponse.json({ error: "Error generando el plan" }, { status: 502 });
-  }
-
-  const groqData = await response.json();
-  const planJson = groqData.choices?.[0]?.message?.content ?? "{}";
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
 
   try {
-    const plan = JSON.parse(planJson);
-    return NextResponse.json({ plan });
-  } catch {
-    console.error("JSON parse error:", planJson.slice(0, 200));
-    return NextResponse.json({ error: "Error procesando el plan" }, { status: 500 });
+    const response = await fetch(GROQ_API_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        max_tokens: 8000,
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Groq error status:", response.status);
+      return NextResponse.json({ error: "Error generando el plan" }, { status: 502 });
+    }
+
+    const groqData = await response.json();
+    const planJson = groqData.choices?.[0]?.message?.content ?? "{}";
+
+    let rawPlan: unknown;
+    try {
+      rawPlan = JSON.parse(planJson);
+    } catch {
+      console.error("Groq returned invalid JSON");
+      return NextResponse.json({ error: "Error procesando el plan" }, { status: 500 });
+    }
+
+    const validated = planSchema.safeParse(rawPlan);
+    if (!validated.success) {
+      console.error("Groq plan failed schema validation");
+      return NextResponse.json({ error: "El plan generado no tiene el formato esperado. Inténtalo de nuevo." }, { status: 500 });
+    }
+
+    return NextResponse.json({ plan: validated.data });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      return NextResponse.json({ error: "La generación tardó demasiado. Inténtalo de nuevo." }, { status: 504 });
+    }
+    console.error("Unexpected error in /api/plan");
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

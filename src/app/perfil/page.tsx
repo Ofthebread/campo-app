@@ -13,7 +13,59 @@ import {
   type PlanResumen,
 } from "@/lib/db";
 
-// ─── helpers ────────────────────────────────────────────────────────────────
+// ─── validation ───────────────────────────────────────────────────────────────
+
+const PHONE_REGEX = /^[+\d][\d\s\-(). ]{6,}$/;
+
+type FieldErrors = Partial<Record<string, string>>;
+
+function validateProfile(fields: {
+  nombre: string;
+  apellidos: string;
+  telefono: string;
+  fechaNacimiento: string;
+  pesoKg: string;
+  alturaCm: string;
+}): FieldErrors {
+  const errors: FieldErrors = {};
+
+  if (fields.nombre.trim() && fields.nombre.trim().length < 2)
+    errors.nombre = "Mínimo 2 caracteres";
+
+  if (fields.apellidos.trim() && fields.apellidos.trim().length < 2)
+    errors.apellidos = "Mínimo 2 caracteres";
+
+  if (fields.telefono.trim() && !PHONE_REGEX.test(fields.telefono.trim()))
+    errors.telefono = "Introduce un teléfono válido (ej: +34 600 000 000)";
+
+  if (fields.fechaNacimiento) {
+    const dob = new Date(fields.fechaNacimiento);
+    const now = new Date();
+    const ageYears = (now.getTime() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    if (dob > now)
+      errors.fechaNacimiento = "La fecha no puede ser futura";
+    else if (ageYears < 10)
+      errors.fechaNacimiento = "Debes tener al menos 10 años";
+    else if (ageYears > 100)
+      errors.fechaNacimiento = "Introduce una fecha válida";
+  }
+
+  if (fields.pesoKg) {
+    const v = Number(fields.pesoKg);
+    if (isNaN(v) || v < 30 || v > 300)
+      errors.pesoKg = "Entre 30 y 300 kg";
+  }
+
+  if (fields.alturaCm) {
+    const v = Number(fields.alturaCm);
+    if (isNaN(v) || v < 100 || v > 250)
+      errors.alturaCm = "Entre 100 y 250 cm";
+  }
+
+  return errors;
+}
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-ES", {
@@ -23,13 +75,15 @@ function formatDate(iso: string) {
   });
 }
 
-// ─── sub-components ──────────────────────────────────────────────────────────
+// ─── sub-components ───────────────────────────────────────────────────────────
 
 function Field({
   label,
+  error,
   children,
 }: {
   label: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -38,6 +92,7 @@ function Field({
         {label}
       </label>
       {children}
+      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
     </div>
   );
 }
@@ -45,22 +100,31 @@ function Field({
 function TextInput({
   value,
   onChange,
+  onBlur,
   placeholder,
   disabled,
+  error,
 }: {
   value: string;
   onChange?: (v: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   disabled?: boolean;
+  error?: string;
 }) {
   return (
     <input
       type="text"
       value={value}
       onChange={(e) => onChange?.(e.target.value)}
+      onBlur={onBlur}
       placeholder={placeholder}
       disabled={disabled}
-      className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      className={`w-full bg-campo-dark border rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:ring-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+        error
+          ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
+          : "border-white/10 focus:border-campo-lime/50 focus:ring-campo-lime/20"
+      }`}
     />
   );
 }
@@ -68,13 +132,17 @@ function TextInput({
 function NumberInput({
   value,
   onChange,
+  onBlur,
   placeholder,
   suffix,
+  error,
 }: {
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   suffix?: string;
+  error?: string;
 }) {
   return (
     <div className="relative">
@@ -82,8 +150,13 @@ function NumberInput({
         type="number"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
-        className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors pr-12"
+        className={`w-full bg-campo-dark border rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:ring-1 transition-colors pr-12 ${
+          error
+            ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
+            : "border-white/10 focus:border-campo-lime/50 focus:ring-campo-lime/20"
+        }`}
       />
       {suffix && (
         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm pointer-events-none">
@@ -94,7 +167,7 @@ function NumberInput({
   );
 }
 
-// ─── plan card ───────────────────────────────────────────────────────────────
+// ─── plan card ────────────────────────────────────────────────────────────────
 
 function PlanCard({
   plan,
@@ -106,10 +179,30 @@ function PlanCard({
   onDelete: () => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const totalSesiones = plan.plan_data.semanas?.reduce(
-    (acc, s) => acc + s.sesiones.length,
-    0
-  ) ?? 0;
+  const [activating, setActivating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const totalSesiones =
+    plan.plan_data.semanas?.reduce((acc, s) => acc + s.sesiones.length, 0) ?? 0;
+
+  async function handleActivate() {
+    setActivating(true);
+    try {
+      await onActivate();
+    } finally {
+      setActivating(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await onDelete();
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
 
   return (
     <div
@@ -133,7 +226,8 @@ function PlanCard({
             {plan.titulo}
           </p>
           <p className="text-white/40 text-xs mt-1">
-            {plan.plan_data.totalSemanas} semanas · {totalSesiones} sesiones · Nivel {plan.plan_data.nivel}
+            {plan.plan_data.totalSemanas} semanas · {totalSesiones} sesiones · Nivel{" "}
+            {plan.plan_data.nivel}
           </p>
         </div>
       </div>
@@ -141,25 +235,28 @@ function PlanCard({
       <div className="flex gap-2 mt-3">
         {!plan.activo && (
           <button
-            onClick={onActivate}
-            className="flex-1 py-2 rounded-xl border border-campo-lime/40 text-campo-lime font-condensed font-bold text-sm tracking-wide hover:bg-campo-lime/10 transition-colors"
+            onClick={handleActivate}
+            disabled={activating}
+            className="flex-1 py-2 rounded-xl border border-campo-lime/40 text-campo-lime font-condensed font-bold text-sm tracking-wide hover:bg-campo-lime/10 transition-colors disabled:opacity-50"
           >
-            ACTIVAR
+            {activating ? "..." : "ACTIVAR"}
           </button>
         )}
         {confirmDelete ? (
           <div className="flex gap-2 flex-1">
             <button
               onClick={() => setConfirmDelete(false)}
-              className="flex-1 py-2 rounded-xl border border-white/20 text-white/50 font-condensed font-bold text-sm tracking-wide hover:border-white/40 transition-colors"
+              disabled={deleting}
+              className="flex-1 py-2 rounded-xl border border-white/20 text-white/50 font-condensed font-bold text-sm tracking-wide hover:border-white/40 transition-colors disabled:opacity-50"
             >
               CANCELAR
             </button>
             <button
-              onClick={onDelete}
-              className="flex-1 py-2 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 font-condensed font-bold text-sm tracking-wide hover:bg-red-500/30 transition-colors"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 py-2 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 font-condensed font-bold text-sm tracking-wide hover:bg-red-500/30 transition-colors disabled:opacity-50"
             >
-              CONFIRMAR
+              {deleting ? "..." : "CONFIRMAR"}
             </button>
           </div>
         ) : (
@@ -177,7 +274,7 @@ function PlanCard({
   );
 }
 
-// ─── main page ───────────────────────────────────────────────────────────────
+// ─── main page ────────────────────────────────────────────────────────────────
 
 type Tab = "datos" | "programas";
 
@@ -186,14 +283,14 @@ export default function PerfilPage() {
   const { user, loading } = useAuth();
   const [tab, setTab] = useState<Tab>("datos");
 
-  // profile state
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // local edit state
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -204,7 +301,6 @@ export default function PerfilPage() {
   const [ciudad, setCiudad] = useState("");
   const [pais, setPais] = useState("");
 
-  // plans state
   const [planes, setPlanes] = useState<PlanResumen[]>([]);
   const [planesLoading, setPlanesLoading] = useState(false);
 
@@ -239,7 +335,29 @@ export default function PerfilPage() {
       .finally(() => setPlanesLoading(false));
   }, [user, tab]);
 
+  function currentFields() {
+    return { nombre, apellidos, telefono, fechaNacimiento, pesoKg, alturaCm };
+  }
+
+  function handleBlur(field: string) {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const errs = validateProfile(currentFields());
+    setFieldErrors((prev) => ({ ...prev, [field]: errs[field] }));
+  }
+
+  function getError(field: string): string | undefined {
+    return touched[field] ? fieldErrors[field] : undefined;
+  }
+
   async function handleSaveProfile() {
+    const allTouched = Object.fromEntries(
+      ["nombre", "apellidos", "telefono", "fechaNacimiento", "pesoKg", "alturaCm"].map((k) => [k, true])
+    );
+    setTouched(allTouched);
+    const errs = validateProfile(currentFields());
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
     setSaving(true);
     setSaved(false);
     setSaveError(null);
@@ -257,8 +375,8 @@ export default function PerfilPage() {
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setSaveError("Error al guardar. Inténtalo de nuevo.");
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Error al guardar. Inténtalo de nuevo.");
     } finally {
       setSaving(false);
     }
@@ -266,9 +384,7 @@ export default function PerfilPage() {
 
   async function handleActivate(planId: string) {
     await setActivePlan(planId);
-    setPlanes((prev) =>
-      prev.map((p) => ({ ...p, activo: p.id === planId }))
-    );
+    setPlanes((prev) => prev.map((p) => ({ ...p, activo: p.id === planId })));
   }
 
   async function handleDelete(planId: string) {
@@ -340,11 +456,23 @@ export default function PerfilPage() {
               </p>
 
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Nombre">
-                  <TextInput value={nombre} onChange={setNombre} placeholder="Tu nombre" />
+                <Field label="Nombre" error={getError("nombre")}>
+                  <TextInput
+                    value={nombre}
+                    onChange={setNombre}
+                    onBlur={() => handleBlur("nombre")}
+                    placeholder="Tu nombre"
+                    error={getError("nombre")}
+                  />
                 </Field>
-                <Field label="Apellidos">
-                  <TextInput value={apellidos} onChange={setApellidos} placeholder="Tus apellidos" />
+                <Field label="Apellidos" error={getError("apellidos")}>
+                  <TextInput
+                    value={apellidos}
+                    onChange={setApellidos}
+                    onBlur={() => handleBlur("apellidos")}
+                    placeholder="Tus apellidos"
+                    error={getError("apellidos")}
+                  />
                 </Field>
               </div>
 
@@ -352,17 +480,28 @@ export default function PerfilPage() {
                 <TextInput value={profile?.email ?? user.email ?? ""} disabled />
               </Field>
 
-              <Field label="Teléfono">
-                <TextInput value={telefono} onChange={setTelefono} placeholder="+34 600 000 000" />
+              <Field label="Teléfono" error={getError("telefono")}>
+                <TextInput
+                  value={telefono}
+                  onChange={setTelefono}
+                  onBlur={() => handleBlur("telefono")}
+                  placeholder="+34 600 000 000"
+                  error={getError("telefono")}
+                />
               </Field>
 
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Fecha de nacimiento">
+                <Field label="Fecha de nacimiento" error={getError("fechaNacimiento")}>
                   <input
                     type="date"
                     value={fechaNacimiento}
                     onChange={(e) => setFechaNacimiento(e.target.value)}
-                    className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors"
+                    onBlur={() => handleBlur("fechaNacimiento")}
+                    className={`w-full bg-campo-dark border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-1 transition-colors ${
+                      getError("fechaNacimiento")
+                        ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
+                        : "border-white/10 focus:border-campo-lime/50 focus:ring-campo-lime/20"
+                    }`}
                   />
                 </Field>
                 <Field label="Género">
@@ -385,11 +524,25 @@ export default function PerfilPage() {
                 Datos físicos
               </p>
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Peso">
-                  <NumberInput value={pesoKg} onChange={setPesoKg} placeholder="70" suffix="kg" />
+                <Field label="Peso" error={getError("pesoKg")}>
+                  <NumberInput
+                    value={pesoKg}
+                    onChange={setPesoKg}
+                    onBlur={() => handleBlur("pesoKg")}
+                    placeholder="70"
+                    suffix="kg"
+                    error={getError("pesoKg")}
+                  />
                 </Field>
-                <Field label="Altura">
-                  <NumberInput value={alturaCm} onChange={setAlturaCm} placeholder="175" suffix="cm" />
+                <Field label="Altura" error={getError("alturaCm")}>
+                  <NumberInput
+                    value={alturaCm}
+                    onChange={setAlturaCm}
+                    onBlur={() => handleBlur("alturaCm")}
+                    placeholder="175"
+                    suffix="cm"
+                    error={getError("alturaCm")}
+                  />
                 </Field>
               </div>
             </div>
@@ -409,7 +562,9 @@ export default function PerfilPage() {
             </div>
 
             {saveError && (
-              <p className="text-sm text-red-400 text-center">{saveError}</p>
+              <div className="p-3 bg-red-900/30 border border-red-500/30 rounded-xl text-sm text-red-400">
+                {saveError}
+              </div>
             )}
 
             <button

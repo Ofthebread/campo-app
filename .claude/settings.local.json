@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm -v)",
+      "Bash(npm uninstall *)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(supabase --version)",
+      "Bash(brew install *)",
+      "Bash(supabase login *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  }
+}
