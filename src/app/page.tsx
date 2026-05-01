@@ -65,19 +65,32 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-        <span className="font-bold text-primary-600">Campo App</span>
-        <button
-          onClick={handleSignOut}
-          className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          Cerrar sesión
-        </button>
+      <header className="bg-campo-card border-b border-white/10 px-5 py-3.5 flex items-center justify-between">
+        <span className="font-condensed font-bold text-xl text-white tracking-wide">CAMPO APP</span>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push("/perfil")}
+            className="text-xs text-white/40 hover:text-white transition-colors font-condensed tracking-wide"
+          >
+            Mi perfil
+          </button>
+          <button
+            onClick={handleSignOut}
+            className="text-xs text-white/40 hover:text-white transition-colors font-condensed tracking-wide"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-6">
         {plan ? (
-          <PlanView plan={plan} planId={planId} onReset={handleReset} />
+          <PlanView
+            plan={plan}
+            planId={planId}
+            onReset={handleReset}
+            onPlanUpdate={(p, id) => { setPlan(p); setPlanId(id); }}
+          />
         ) : (
           <OnboardingForm onPlanCreated={(p, id) => { setPlan(p); setPlanId(id); }} />
         )}

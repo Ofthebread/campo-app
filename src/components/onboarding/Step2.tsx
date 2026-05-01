@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import type { OnboardingData } from "@/types/plan";
+
+const VOLUMEN_OPTS: { value: OnboardingData["volumenCarrera"]; label: string }[] = [
+  { value: "nada", label: "No corro" },
+  { value: "menos_20", label: "Menos de 20 min" },
+  { value: "20_40", label: "20 – 40 min" },
+  { value: "mas_40", label: "Más de 40 min" },
+];
 
 interface Props {
   data: Partial<OnboardingData>;
@@ -10,98 +16,95 @@ interface Props {
   onBack: () => void;
 }
 
-const SEMANAS_OPTIONS = [4, 6, 8, 10, 12, 16];
-
 export default function Step2({ data, onChange, onNext, onBack }: Props) {
-  const [modo, setModo] = useState<"fecha" | "semanas">("semanas");
-
-  const isValid =
-    (modo === "fecha" && data.fechaEvento) ||
-    (modo === "semanas" && data.semanasHastaObjetivo);
-
-  function handleModo(m: "fecha" | "semanas") {
-    setModo(m);
-    onChange({ ...data, fechaEvento: undefined, semanasHastaObjetivo: undefined });
-  }
-
-  const today = new Date().toISOString().split("T")[0];
+  const isValid = data.volumenCarrera && data.edad && data.peso;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
-          ¿Cómo quieres planificar?
-        </h2>
-        <div className="flex gap-3">
-          {(["semanas", "fecha"] as const).map((m) => (
+        <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+          ¿Cuánto corres ahora mismo?
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {VOLUMEN_OPTS.map((o) => (
             <button
-              key={m}
-              onClick={() => handleModo(m)}
-              className={`flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
-                modo === m
-                  ? "border-primary-600 bg-primary-50 text-primary-700"
-                  : "border-slate-200 text-slate-600 hover:border-slate-300 bg-white"
+              key={o.value}
+              onClick={() => onChange({ ...data, volumenCarrera: o.value })}
+              className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
+                data.volumenCarrera === o.value
+                  ? "border-campo-lime bg-campo-lime/10 text-campo-lime"
+                  : "border-white/10 text-white/60 hover:border-white/30 hover:text-white"
               }`}
             >
-              {m === "semanas" ? "Por semanas" : "Por fecha de evento"}
+              {o.label}
             </button>
           ))}
         </div>
       </div>
 
-      {modo === "semanas" && (
+      <div>
+        <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+          Lesiones o limitaciones físicas
+        </label>
+        <input
+          type="text"
+          value={data.lesiones ?? ""}
+          onChange={(e) => onChange({ ...data, lesiones: e.target.value })}
+          placeholder="Rodilla, espalda, ninguna... (opcional)"
+          className="w-full bg-campo-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-campo-lime/60 focus:ring-1 focus:ring-campo-lime/30 transition-colors"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
-            ¿Cuántas semanas quieres entrenar?
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            {SEMANAS_OPTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => onChange({ ...data, semanasHastaObjetivo: s, fechaEvento: undefined })}
-                className={`py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
-                  data.semanasHastaObjetivo === s
-                    ? "border-primary-600 bg-primary-600 text-white"
-                    : "border-slate-200 hover:border-slate-300 text-slate-700 bg-white"
-                }`}
-              >
-                {s} semanas
-              </button>
-            ))}
+          <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+            Edad
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              min={10}
+              max={99}
+              value={data.edad ?? ""}
+              onChange={(e) => onChange({ ...data, edad: Number(e.target.value) })}
+              placeholder="28"
+              className="w-full bg-campo-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-campo-lime/60 focus:ring-1 focus:ring-campo-lime/30 transition-colors pr-12"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">años</span>
           </div>
         </div>
-      )}
-
-      {modo === "fecha" && (
         <div>
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
-            ¿Cuándo es tu evento?
-          </h2>
-          <input
-            type="date"
-            min={today}
-            value={data.fechaEvento ?? ""}
-            onChange={(e) =>
-              onChange({ ...data, fechaEvento: e.target.value, semanasHastaObjetivo: undefined })
-            }
-            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-primary-500 text-sm"
-          />
+          <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+            Peso
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              min={30}
+              max={250}
+              value={data.peso ?? ""}
+              onChange={(e) => onChange({ ...data, peso: Number(e.target.value) })}
+              placeholder="70"
+              className="w-full bg-campo-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-campo-lime/60 focus:ring-1 focus:ring-campo-lime/30 transition-colors pr-10"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">kg</span>
+          </div>
         </div>
-      )}
+      </div>
 
       <div className="flex gap-3">
         <button
           onClick={onBack}
-          className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold hover:border-slate-300 transition-colors text-sm"
+          className="flex-1 border border-white/20 text-white/60 font-condensed font-bold text-lg py-3.5 rounded-xl hover:border-white/40 hover:text-white transition-colors tracking-wide"
         >
-          Atrás
+          ATRÁS
         </button>
         <button
           onClick={onNext}
           disabled={!isValid}
-          className="flex-1 bg-primary-600 text-white py-3 rounded-xl font-semibold hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+          className="flex-[2] bg-campo-lime text-campo-darker font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-campo-lime-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed tracking-wide"
         >
-          Generar mi plan
+          SIGUIENTE
         </button>
       </div>
     </div>

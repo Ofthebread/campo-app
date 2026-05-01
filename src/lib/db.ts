@@ -1,7 +1,44 @@
 import { supabase } from "./supabase";
 import type { PlanEntrenamiento } from "@/types/plan";
 
+export interface ProfileData {
+  id: string;
+  nombre: string | null;
+  apellidos: string | null;
+  email: string | null;
+  telefono: string | null;
+  fecha_nacimiento: string | null;
+  genero: string | null;
+  peso_kg: number | null;
+  altura_cm: number | null;
+  ciudad: string | null;
+  pais: string | null;
+  objetivo: string | null;
+  dias_semana: number | null;
+}
+
+export interface PlanResumen {
+  id: string;
+  titulo: string;
+  activo: boolean;
+  created_at: string;
+  plan_data: PlanEntrenamiento;
+}
+
+export async function getProfile(): Promise<ProfileData | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, nombre, apellidos, email, telefono, fecha_nacimiento, genero, peso_kg, altura_cm, ciudad, pais, objetivo, dias_semana")
+    .eq("id", session.user.id)
+    .single();
+  return data as ProfileData | null;
+}
+
 export async function updateProfile(fields: {
+  nombre?: string;
+  apellidos?: string;
   objetivo?: string;
   nivel?: string;
   dias_semana?: number;
@@ -14,8 +51,34 @@ export async function updateProfile(fields: {
   genero?: string;
 }) {
   const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("No hay sesión activa");
+  const { error } = await supabase.from("profiles").update(fields).eq("id", session.user.id);
+  if (error) throw new Error(error.message);
+}
+
+export async function getAllPlans(): Promise<PlanResumen[]> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return [];
+  const { data } = await supabase
+    .from("planes")
+    .select("id, titulo, activo, created_at, plan_data")
+    .eq("user_id", session.user.id)
+    .order("created_at", { ascending: false });
+  return (data ?? []) as PlanResumen[];
+}
+
+export async function setActivePlan(planId: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
-  await supabase.from("profiles").update(fields).eq("id", session.user.id);
+  await supabase.from("planes").update({ activo: false }).eq("user_id", session.user.id);
+  await supabase.from("planes").update({ activo: true }).eq("id", planId).eq("user_id", session.user.id);
+}
+
+export async function deletePlan(planId: string): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  await supabase.from("sesiones_completadas").delete().eq("plan_id", planId);
+  await supabase.from("planes").delete().eq("id", planId).eq("user_id", session.user.id);
 }
 
 export async function savePlan(plan: PlanEntrenamiento): Promise<string> {

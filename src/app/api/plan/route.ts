@@ -4,36 +4,44 @@ import { z } from "zod";
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 const requestSchema = z.object({
-  objetivo: z.enum(["rugby", "navette", "carrera_popular", "forma_fisica"]),
-  nivel: z.enum(["sedentario", "algo_activo", "activo"]),
+  objetivo: z.string().min(1),
+  volumenCarrera: z.enum(["nada", "menos_20", "20_40", "mas_40"]),
+  lesiones: z.string(),
+  edad: z.number().min(10).max(99),
+  peso: z.number().min(30).max(250),
   diasDisponibles: z.number().min(1).max(7),
-  fechaEvento: z.string().optional(),
-  semanasHastaObjetivo: z.number().min(1).max(52).optional(),
+  duracionMaxSesion: z.enum(["30min", "45min", "1h", "mas_1h"]),
+  lugarEntrenamiento: z.enum(["calle", "pista", "cinta", "campo"]),
+  tieneDispositivo: z.boolean(),
+  otrosDeportes: z.string(),
+  preferenciaEntrenamiento: z.enum(["corta_intensa", "larga_suave"]),
 });
 
-const OBJETIVO_LABELS: Record<string, string> = {
-  rugby: "rugby (preparación física específica para rugby: potencia, agilidad, resistencia)",
-  navette: "test de Course Navette / Léger (mejorar el VO2max y resistencia aeróbica)",
-  carrera_popular: "carrera popular (completar o mejorar marca en una carrera de calle)",
-  forma_fisica: "mejorar la forma física general (salud, composición corporal y bienestar)",
+const VOLUMEN_LABELS: Record<string, string> = {
+  nada: "no corre actualmente (punto de partida desde cero)",
+  menos_20: "corre menos de 20 minutos seguidos",
+  "20_40": "corre entre 20 y 40 minutos seguidos",
+  mas_40: "corre más de 40 minutos seguidos con comodidad",
 };
 
-const NIVEL_LABELS: Record<string, string> = {
-  sedentario: "sedentario (no hace ejercicio actualmente, punto de partida desde cero)",
-  algo_activo: "algo activo (hace algo de ejercicio ocasionalmente, 1-2 veces por semana)",
-  activo: "activo (entrena regularmente, 3 o más veces por semana)",
+const DURACION_LABELS: Record<string, string> = {
+  "30min": "máximo 30 minutos por sesión",
+  "45min": "máximo 45 minutos por sesión",
+  "1h": "máximo 1 hora por sesión",
+  mas_1h: "más de 1 hora por sesión",
 };
 
-function calcularSemanas(data: z.infer<typeof requestSchema>): number {
-  if (data.semanasHastaObjetivo) return Math.max(4, Math.min(data.semanasHastaObjetivo, 16));
-  if (data.fechaEvento) {
-    const diff = Math.ceil(
-      (new Date(data.fechaEvento).getTime() - Date.now()) / (7 * 24 * 60 * 60 * 1000)
-    );
-    return Math.max(4, Math.min(diff, 16));
-  }
-  return 8;
-}
+const LUGAR_LABELS: Record<string, string> = {
+  calle: "calle o asfalto",
+  pista: "pista de atletismo",
+  cinta: "cinta de correr (indoor)",
+  campo: "campo o trail / hierba",
+};
+
+const PREFERENCIA_LABELS: Record<string, string> = {
+  corta_intensa: "sesiones cortas e intensas (prefiere calidad sobre cantidad)",
+  larga_suave: "sesiones largas y suaves (prefiere volumen y resistencia)",
+};
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -43,28 +51,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
-  const data = parsed.data;
-  const totalSemanas = calcularSemanas(data);
+  const d = parsed.data;
+  const totalSemanas = 8;
 
   const prompt = `Eres un coach de fitness y running experto. Genera un plan de entrenamiento personalizado en JSON.
 
-Perfil del usuario:
-- Objetivo: ${OBJETIVO_LABELS[data.objetivo]}
-- Nivel actual: ${NIVEL_LABELS[data.nivel]}
-- Días disponibles por semana: ${data.diasDisponibles}
-- Duración del plan: ${totalSemanas} semanas
+Perfil completo del usuario:
+- Objetivo personal: "${d.objetivo}"
+- Edad: ${d.edad} años
+- Peso: ${d.peso} kg
+- Volumen de carrera actual: ${VOLUMEN_LABELS[d.volumenCarrera]}
+- Lesiones o limitaciones físicas: ${d.lesiones || "ninguna"}
+- Días disponibles para entrenar: ${d.diasDisponibles} días por semana
+- Duración máxima por sesión: ${DURACION_LABELS[d.duracionMaxSesion]}
+- Lugar de entrenamiento: ${LUGAR_LABELS[d.lugarEntrenamiento]}
+- Dispone de pulsómetro o Apple Watch: ${d.tieneDispositivo ? "sí, puede entrenar por zonas de frecuencia cardíaca" : "no"}
+- Otros deportes que practica: ${d.otrosDeportes || "ninguno"}
+- Preferencia de entrenamiento: ${PREFERENCIA_LABELS[d.preferenciaEntrenamiento]}
 
 Instrucciones importantes:
-- Diseña exactamente ${data.diasDisponibles} sesiones por semana (no más).
-- Adapta la intensidad y volumen al nivel "${data.nivel}".
+- Diseña exactamente ${d.diasDisponibles} sesiones por semana.
+- Respeta estrictamente la duración máxima por sesión indicada.
+- Adapta los ejercicios al lugar de entrenamiento (${LUGAR_LABELS[d.lugarEntrenamiento]}).
+- ${d.lesiones ? `Ten en cuenta las siguientes limitaciones físicas: ${d.lesiones}. Evita ejercicios que puedan agravar estas condiciones.` : ""}
+- ${d.tieneDispositivo ? "Incluye referencias a zonas de frecuencia cardíaca cuando sea útil." : "No menciones zonas de frecuencia cardíaca ni pulsómetro."}
 - El plan debe ser progresivo: cada semana aumenta ligeramente la carga.
-- Los ejercicios deben ser detallados y con instrucciones de técnica.
-- Para ejercicios de carrera usa duracion (no series/repeticiones). Para fuerza usa series y repeticiones.
+- Adapta la intensidad a la preferencia del usuario: ${PREFERENCIA_LABELS[d.preferenciaEntrenamiento]}.
+- Los ejercicios deben ser detallados con instrucciones de técnica correcta.
+- Para carrera usa duracion (no series/reps). Para fuerza usa series y repeticiones.
+- El plan debe empezar desde el nivel actual: ${VOLUMEN_LABELS[d.volumenCarrera]}.
 
-Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin texto adicional):
+Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta:
 
 {
-  "titulo": "string",
+  "titulo": "string descriptivo del plan",
   "objetivo": "string descripción del objetivo",
   "nivel": "string nivel del usuario",
   "totalSemanas": ${totalSemanas},
@@ -86,7 +106,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin text
               "repeticiones": null,
               "duracion": "string (ej: '20 minutos') o null si es de fuerza",
               "descanso": "string (ej: '60 segundos') o null si no aplica",
-              "descripcion": "string descripción detallada del ejercicio con técnica correcta"
+              "descripcion": "string descripción detallada con técnica correcta"
             }
           ],
           "vueltaCalma": "string descripción de vuelta a la calma de 5 minutos",

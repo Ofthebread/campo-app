@@ -5,10 +5,12 @@ import type { OnboardingData, PlanEntrenamiento } from "@/types/plan";
 import { savePlan, updateProfile } from "@/lib/db";
 import Step1 from "./Step1";
 import Step2 from "./Step2";
+import Step3 from "./Step3";
+import Step4 from "./Step4";
 
-type Step = 1 | 2 | "loading";
+type Step = 1 | 2 | 3 | 4 | "loading";
 
-const STEP_LABELS = ["Tu perfil", "Tu objetivo", "Tu plan"];
+const STEP_LABELS = ["Objetivo", "Tu estado", "Disponibilidad", "Preferencias"];
 
 interface Props {
   onPlanCreated: (plan: PlanEntrenamiento, planId: string) => void;
@@ -39,89 +41,86 @@ export default function OnboardingForm({ onPlanCreated }: Props) {
 
       await updateProfile({
         objetivo: formData.objetivo,
-        nivel: formData.nivel,
         dias_semana: formData.diasDisponibles,
       });
 
       onPlanCreated(planGenerado, id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
-      setStep(2);
+      setStep(4);
     }
   }
 
-  const currentStepIndex = step === 1 ? 0 : step === 2 ? 1 : 2;
+  const currentStepIndex = step === "loading" ? 4 : (step as number) - 1;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6">
-      {step !== "loading" && (
+    <div className="min-h-screen bg-campo-dark flex flex-col">
+      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-5 py-8">
+
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            {STEP_LABELS.map((label, i) => (
-              <div key={i} className="flex items-center gap-2 flex-1">
+          <h1 className="font-condensed text-3xl font-bold text-white tracking-wide mb-1">
+            CAMPO APP
+          </h1>
+          <p className="text-white/40 text-sm">Tu coach de running con IA</p>
+        </div>
+
+        {step !== "loading" && (
+          <div className="mb-8">
+            <div className="flex items-center gap-1 mb-3">
+              {[1, 2, 3, 4].map((s) => (
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    i <= currentStepIndex
-                      ? "bg-primary-600 text-white"
-                      : "bg-slate-200 text-slate-500"
+                  key={s}
+                  className={`flex-1 h-1 rounded-full transition-all duration-300 ${
+                    s <= currentStepIndex + 1 ? "bg-campo-lime" : "bg-white/10"
                   }`}
-                >
-                  {i < currentStepIndex ? "✓" : i + 1}
-                </div>
+                />
+              ))}
+            </div>
+            <p className="text-white/40 text-xs font-condensed tracking-widest uppercase">
+              Paso {step} de 4 · {STEP_LABELS[currentStepIndex]}
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-900/30 border border-red-500/30 rounded-xl text-sm text-red-400">
+            {error}. Inténtalo de nuevo.
+          </div>
+        )}
+
+        {step === 1 && (
+          <Step1 data={formData} onChange={setFormData} onNext={() => setStep(2)} />
+        )}
+        {step === 2 && (
+          <Step2 data={formData} onChange={setFormData} onNext={() => setStep(3)} onBack={() => setStep(1)} />
+        )}
+        {step === 3 && (
+          <Step3 data={formData} onChange={setFormData} onNext={() => setStep(4)} onBack={() => setStep(2)} />
+        )}
+        {step === 4 && (
+          <Step4 data={formData} onChange={setFormData} onNext={generarPlan} onBack={() => setStep(3)} />
+        )}
+
+        {step === "loading" && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-6 py-20">
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
                 <span
-                  className={`text-xs font-medium hidden sm:block ${
-                    i === currentStepIndex ? "text-slate-800" : "text-slate-400"
-                  }`}
-                >
-                  {label}
-                </span>
-                {i < STEP_LABELS.length - 1 && (
-                  <div
-                    className={`flex-1 h-0.5 ${
-                      i < currentStepIndex ? "bg-primary-600" : "bg-slate-200"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+                  key={i}
+                  className="w-3 h-3 bg-campo-lime rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 150}ms` }}
+                />
+              ))}
+            </div>
+            <div className="text-center">
+              <p className="font-condensed text-xl font-bold text-white tracking-wide">
+                GENERANDO TU PLAN
+              </p>
+              <p className="text-white/40 text-sm mt-1">Puede tardar unos segundos</p>
+            </div>
           </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error}. Inténtalo de nuevo.
-        </div>
-      )}
-
-      {step === 1 && (
-        <Step1 data={formData} onChange={setFormData} onNext={() => setStep(2)} />
-      )}
-
-      {step === 2 && (
-        <Step2
-          data={formData}
-          onChange={setFormData}
-          onNext={generarPlan}
-          onBack={() => setStep(1)}
-        />
-      )}
-
-      {step === "loading" && (
-        <div className="py-16 flex flex-col items-center gap-4">
-          <div className="flex gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="w-3 h-3 bg-primary-500 rounded-full animate-bounce"
-                style={{ animationDelay: `${i * 150}ms` }}
-              />
-            ))}
-          </div>
-          <p className="text-slate-600 font-medium">Generando tu plan personalizado...</p>
-          <p className="text-slate-400 text-sm">Puede tardar unos segundos</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

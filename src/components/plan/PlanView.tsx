@@ -10,9 +10,10 @@ interface Props {
   plan: PlanEntrenamiento;
   planId: string | null;
   onReset: () => void;
+  onPlanUpdate?: (plan: PlanEntrenamiento, planId: string) => void;
 }
 
-export default function PlanView({ plan, planId, onReset }: Props) {
+export default function PlanView({ plan, planId, onReset, onPlanUpdate }: Props) {
   const [semanaActiva, setSemanaActiva] = useState(0);
   const [tab, setTab] = useState<"plan" | "consejos" | "coach">("plan");
   const { completadas, toggle } = useSesionesCompletadas(planId);
@@ -168,7 +169,7 @@ export default function PlanView({ plan, planId, onReset }: Props) {
           <p className="text-xs text-slate-500 mb-3">
             El coach conoce tu plan completo y puede responder preguntas sobre él.
           </p>
-          <ChatInterface planContext={planContext} />
+          <ChatInterface planContext={planContext} onPlanUpdate={onPlanUpdate} />
         </div>
       )}
     </div>

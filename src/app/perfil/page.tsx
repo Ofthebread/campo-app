@@ -1,0 +1,473 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  getProfile,
+  updateProfile,
+  getAllPlans,
+  setActivePlan,
+  deletePlan,
+  type ProfileData,
+  type PlanResumen,
+} from "@/lib/db";
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+// ─── sub-components ──────────────────────────────────────────────────────────
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block font-condensed text-xs font-semibold text-campo-lime mb-1.5 tracking-widest uppercase">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function TextInput({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+}: {
+  value: string;
+  onChange?: (v: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+    />
+  );
+}
+
+function NumberInput({
+  value,
+  onChange,
+  placeholder,
+  suffix,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  suffix?: string;
+}) {
+  return (
+    <div className="relative">
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors pr-12"
+      />
+      {suffix && (
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm pointer-events-none">
+          {suffix}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─── plan card ───────────────────────────────────────────────────────────────
+
+function PlanCard({
+  plan,
+  onActivate,
+  onDelete,
+}: {
+  plan: PlanResumen;
+  onActivate: () => void;
+  onDelete: () => void;
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const totalSesiones = plan.plan_data.semanas?.reduce(
+    (acc, s) => acc + s.sesiones.length,
+    0
+  ) ?? 0;
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 transition-all ${
+        plan.activo
+          ? "border-campo-lime/40 bg-campo-lime/5"
+          : "border-white/10 bg-campo-dark"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            {plan.activo && (
+              <span className="text-[10px] font-condensed font-bold tracking-widest text-campo-darker bg-campo-lime px-2 py-0.5 rounded-full uppercase">
+                Activo
+              </span>
+            )}
+            <span className="text-white/30 text-xs">{formatDate(plan.created_at)}</span>
+          </div>
+          <p className="font-condensed font-bold text-white text-base tracking-wide leading-tight truncate">
+            {plan.titulo}
+          </p>
+          <p className="text-white/40 text-xs mt-1">
+            {plan.plan_data.totalSemanas} semanas · {totalSesiones} sesiones · Nivel {plan.plan_data.nivel}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-3">
+        {!plan.activo && (
+          <button
+            onClick={onActivate}
+            className="flex-1 py-2 rounded-xl border border-campo-lime/40 text-campo-lime font-condensed font-bold text-sm tracking-wide hover:bg-campo-lime/10 transition-colors"
+          >
+            ACTIVAR
+          </button>
+        )}
+        {confirmDelete ? (
+          <div className="flex gap-2 flex-1">
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="flex-1 py-2 rounded-xl border border-white/20 text-white/50 font-condensed font-bold text-sm tracking-wide hover:border-white/40 transition-colors"
+            >
+              CANCELAR
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex-1 py-2 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 font-condensed font-bold text-sm tracking-wide hover:bg-red-500/30 transition-colors"
+            >
+              CONFIRMAR
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className={`py-2 px-4 rounded-xl border border-white/10 text-white/30 font-condensed font-bold text-sm tracking-wide hover:border-red-500/40 hover:text-red-400 transition-colors ${
+              plan.activo ? "flex-1" : ""
+            }`}
+          >
+            ELIMINAR
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── main page ───────────────────────────────────────────────────────────────
+
+type Tab = "datos" | "programas";
+
+export default function PerfilPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const [tab, setTab] = useState<Tab>("datos");
+
+  // profile state
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // local edit state
+  const [nombre, setNombre] = useState("");
+  const [apellidos, setApellidos] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [fechaNacimiento, setFechaNacimiento] = useState("");
+  const [genero, setGenero] = useState("");
+  const [pesoKg, setPesoKg] = useState("");
+  const [alturaCm, setAlturaCm] = useState("");
+  const [ciudad, setCiudad] = useState("");
+  const [pais, setPais] = useState("");
+
+  // plans state
+  const [planes, setPlanes] = useState<PlanResumen[]>([]);
+  const [planesLoading, setPlanesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) router.push("/auth");
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    getProfile().then((p) => {
+      setProfile(p);
+      if (p) {
+        setNombre(p.nombre ?? "");
+        setApellidos(p.apellidos ?? "");
+        setTelefono(p.telefono ?? "");
+        setFechaNacimiento(p.fecha_nacimiento ?? "");
+        setGenero(p.genero ?? "");
+        setPesoKg(p.peso_kg != null ? String(p.peso_kg) : "");
+        setAlturaCm(p.altura_cm != null ? String(p.altura_cm) : "");
+        setCiudad(p.ciudad ?? "");
+        setPais(p.pais ?? "");
+      }
+      setProfileLoading(false);
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || tab !== "programas") return;
+    setPlanesLoading(true);
+    getAllPlans()
+      .then(setPlanes)
+      .finally(() => setPlanesLoading(false));
+  }, [user, tab]);
+
+  async function handleSaveProfile() {
+    setSaving(true);
+    setSaved(false);
+    setSaveError(null);
+    try {
+      await updateProfile({
+        nombre: nombre.trim() || undefined,
+        apellidos: apellidos.trim() || undefined,
+        telefono: telefono.trim() || undefined,
+        fecha_nacimiento: fechaNacimiento || undefined,
+        genero: genero || undefined,
+        peso_kg: pesoKg ? Number(pesoKg) : undefined,
+        altura_cm: alturaCm ? Number(alturaCm) : undefined,
+        ciudad: ciudad.trim() || undefined,
+        pais: pais.trim() || undefined,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      setSaveError("Error al guardar. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleActivate(planId: string) {
+    await setActivePlan(planId);
+    setPlanes((prev) =>
+      prev.map((p) => ({ ...p, activo: p.id === planId }))
+    );
+  }
+
+  async function handleDelete(planId: string) {
+    await deletePlan(planId);
+    setPlanes((prev) => prev.filter((p) => p.id !== planId));
+  }
+
+  if (loading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-campo-dark flex items-center justify-center">
+        <div className="flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="w-3 h-3 bg-campo-lime rounded-full animate-bounce"
+              style={{ animationDelay: `${i * 150}ms` }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  return (
+    <div className="min-h-screen bg-campo-dark flex flex-col">
+      <div className="max-w-lg mx-auto w-full px-5 py-8 flex-1 flex flex-col">
+
+        {/* header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="font-condensed text-3xl font-bold text-white tracking-wide">
+              MI PERFIL
+            </h1>
+            <p className="text-white/40 text-sm">{profile?.email ?? user.email}</p>
+          </div>
+          <button
+            onClick={() => router.push("/")}
+            className="text-white/40 hover:text-white transition-colors text-sm font-condensed tracking-wide"
+          >
+            ← VOLVER
+          </button>
+        </div>
+
+        {/* tabs */}
+        <div className="flex gap-1 mb-6 bg-campo-card rounded-xl p-1">
+          {(["datos", "programas"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex-1 py-2 rounded-lg font-condensed font-bold text-sm tracking-widest uppercase transition-all ${
+                tab === t
+                  ? "bg-campo-lime text-campo-darker"
+                  : "text-white/40 hover:text-white"
+              }`}
+            >
+              {t === "datos" ? "Mis datos" : "Programas"}
+            </button>
+          ))}
+        </div>
+
+        {/* ── tab: datos ── */}
+        {tab === "datos" && (
+          <div className="flex-1 flex flex-col gap-5">
+            <div className="bg-campo-card rounded-2xl border border-white/10 p-5 space-y-4">
+              <p className="font-condensed text-xs text-white/30 tracking-widest uppercase">
+                Información personal
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Nombre">
+                  <TextInput value={nombre} onChange={setNombre} placeholder="Tu nombre" />
+                </Field>
+                <Field label="Apellidos">
+                  <TextInput value={apellidos} onChange={setApellidos} placeholder="Tus apellidos" />
+                </Field>
+              </div>
+
+              <Field label="Email">
+                <TextInput value={profile?.email ?? user.email ?? ""} disabled />
+              </Field>
+
+              <Field label="Teléfono">
+                <TextInput value={telefono} onChange={setTelefono} placeholder="+34 600 000 000" />
+              </Field>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Fecha de nacimiento">
+                  <input
+                    type="date"
+                    value={fechaNacimiento}
+                    onChange={(e) => setFechaNacimiento(e.target.value)}
+                    className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors"
+                  />
+                </Field>
+                <Field label="Género">
+                  <select
+                    value={genero}
+                    onChange={(e) => setGenero(e.target.value)}
+                    className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors appearance-none"
+                  >
+                    <option value="">Sin especificar</option>
+                    <option value="hombre">Hombre</option>
+                    <option value="mujer">Mujer</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </Field>
+              </div>
+            </div>
+
+            <div className="bg-campo-card rounded-2xl border border-white/10 p-5 space-y-4">
+              <p className="font-condensed text-xs text-white/30 tracking-widest uppercase">
+                Datos físicos
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Peso">
+                  <NumberInput value={pesoKg} onChange={setPesoKg} placeholder="70" suffix="kg" />
+                </Field>
+                <Field label="Altura">
+                  <NumberInput value={alturaCm} onChange={setAlturaCm} placeholder="175" suffix="cm" />
+                </Field>
+              </div>
+            </div>
+
+            <div className="bg-campo-card rounded-2xl border border-white/10 p-5 space-y-4">
+              <p className="font-condensed text-xs text-white/30 tracking-widest uppercase">
+                Ubicación
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Ciudad">
+                  <TextInput value={ciudad} onChange={setCiudad} placeholder="Bilbao" />
+                </Field>
+                <Field label="País">
+                  <TextInput value={pais} onChange={setPais} placeholder="España" />
+                </Field>
+              </div>
+            </div>
+
+            {saveError && (
+              <p className="text-sm text-red-400 text-center">{saveError}</p>
+            )}
+
+            <button
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="w-full bg-campo-lime text-campo-darker font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-campo-lime-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
+            >
+              {saving ? "GUARDANDO..." : saved ? "✓ GUARDADO" : "GUARDAR CAMBIOS"}
+            </button>
+          </div>
+        )}
+
+        {/* ── tab: programas ── */}
+        {tab === "programas" && (
+          <div className="flex-1 flex flex-col gap-3">
+            {planesLoading ? (
+              <div className="flex gap-2 justify-center py-12">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="w-3 h-3 bg-campo-lime rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 150}ms` }}
+                  />
+                ))}
+              </div>
+            ) : planes.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
+                <p className="font-condensed text-xl font-bold text-white/30 tracking-wide mb-2">
+                  SIN PROGRAMAS
+                </p>
+                <p className="text-white/20 text-sm">
+                  Todavía no tienes ningún programa creado.
+                </p>
+                <button
+                  onClick={() => router.push("/")}
+                  className="mt-6 px-6 py-3 rounded-xl border border-campo-lime/40 text-campo-lime font-condensed font-bold text-sm tracking-wide hover:bg-campo-lime/10 transition-colors"
+                >
+                  CREAR PROGRAMA
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="font-condensed text-xs text-white/30 tracking-widest uppercase mb-1">
+                  {planes.length} {planes.length === 1 ? "programa" : "programas"}
+                </p>
+                {planes.map((plan) => (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    onActivate={() => handleActivate(plan.id)}
+                    onDelete={() => handleDelete(plan.id)}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

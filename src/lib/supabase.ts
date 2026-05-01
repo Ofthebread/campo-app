@@ -17,8 +17,7 @@ export async function signUp(
   if (data.user) {
     await supabase
       .from("profiles")
-      .update({ nombre, apellidos, email })
-      .eq("id", data.user.id);
+      .upsert({ id: data.user.id, nombre, apellidos, email });
   }
 
   return data;

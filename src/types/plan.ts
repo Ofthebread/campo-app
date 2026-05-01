@@ -1,12 +1,22 @@
-export type Objetivo = "rugby" | "navette" | "carrera_popular" | "forma_fisica";
-export type Nivel = "sedentario" | "algo_activo" | "activo";
-
 export interface OnboardingData {
-  objetivo: Objetivo;
-  nivel: Nivel;
+  // Paso 1
+  objetivo: string;
+
+  // Paso 2
+  volumenCarrera: "nada" | "menos_20" | "20_40" | "mas_40";
+  lesiones: string;
+  edad: number;
+  peso: number;
+
+  // Paso 3
   diasDisponibles: number;
-  fechaEvento?: string;
-  semanasHastaObjetivo?: number;
+  duracionMaxSesion: "30min" | "45min" | "1h" | "mas_1h";
+  lugarEntrenamiento: "calle" | "pista" | "cinta" | "campo";
+  tieneDispositivo: boolean;
+
+  // Paso 4
+  otrosDeportes: string;
+  preferenciaEntrenamiento: "corta_intensa" | "larga_suave";
 }
 
 export interface Ejercicio {

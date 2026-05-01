@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { CoachMessage } from "@/types/user";
+import type { PlanEntrenamiento } from "@/types/plan";
+
+export interface CoachMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  updatedPlan?: PlanEntrenamiento;
+}
 
 export function useCoach(planContext?: string) {
   const [messages, setMessages] = useState<CoachMessage[]>([]);
@@ -41,6 +49,7 @@ export function useCoach(planContext?: string) {
         role: "assistant",
         content: data.reply,
         timestamp: new Date().toISOString(),
+        updatedPlan: data.updatedPlan ?? undefined,
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
