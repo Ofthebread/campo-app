@@ -38,3 +38,10 @@ export async function getUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
+
+export async function resetPassword(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset`,
+  });
+  if (error) throw error;
+}
