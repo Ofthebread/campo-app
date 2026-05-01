@@ -58,7 +58,7 @@ function inputClass(error?: string) {
   return `w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-colors ${
     error
       ? "border-red-400 focus:ring-red-300 bg-red-50"
-      : "border-slate-200 focus:ring-primary-400"
+      : "border-negro/15 focus:ring-lila/30"
   }`;
 }
 
@@ -171,15 +171,15 @@ export default function AuthForm() {
 
   if (view === "forgot") {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 w-full max-w-sm mx-auto">
+      <div className="bg-blanco rounded-2xl border border-negro/15 p-6 w-full max-w-sm mx-auto">
         <button
           onClick={() => { setView("form"); setForgotEmailError(null); setForgotEmail(""); }}
-          className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-5 transition-colors"
+          className="flex items-center gap-1 text-xs text-negro/40 hover:text-negro/70 mb-5 transition-colors"
         >
           <span>←</span> Volver
         </button>
-        <h2 className="text-base font-semibold text-slate-800 mb-1">¿Olvidaste tu contraseña?</h2>
-        <p className="text-sm text-slate-500 mb-5">
+        <h2 className="text-base font-semibold text-negro mb-1">¿Olvidaste tu contraseña?</h2>
+        <p className="text-sm text-negro/50 mb-5">
           Introduce tu email y te enviaremos un enlace para restablecerla.
         </p>
         {success && (
@@ -189,7 +189,7 @@ export default function AuthForm() {
         )}
         <form onSubmit={handleForgot} className="space-y-4" noValidate>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-negro/80 mb-1">Email</label>
             <input
               type="email"
               value={forgotEmail}
@@ -202,7 +202,7 @@ export default function AuthForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+            className="w-full bg-lila text-blanco py-2.5 rounded-lg text-sm font-semibold hover:bg-lila-dark transition-colors disabled:opacity-60"
           >
             {loading ? "Enviando..." : "Enviar enlace"}
           </button>
@@ -213,12 +213,12 @@ export default function AuthForm() {
 
   return (
     <>
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 w-full max-w-sm mx-auto">
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl mb-6">
+    <div className="bg-blanco rounded-2xl border border-negro/15 p-6 w-full max-w-sm mx-auto">
+      <div className="flex gap-1 bg-negro/8 p-1 rounded-xl mb-6">
         <button
           onClick={() => switchTab("login")}
           className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-            tab === "login" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            tab === "login" ? "bg-blanco text-negro shadow-sm" : "text-negro/50 hover:text-negro/80"
           }`}
         >
           Entrar
@@ -226,7 +226,7 @@ export default function AuthForm() {
         <button
           onClick={() => switchTab("register")}
           className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-            tab === "register" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            tab === "register" ? "bg-blanco text-negro shadow-sm" : "text-negro/50 hover:text-negro/80"
           }`}
         >
           Crear cuenta
@@ -270,7 +270,7 @@ export default function AuthForm() {
             <button
               type="button"
               onClick={() => { setView("forgot"); setSuccess(null); setServerError(null); }}
-              className="text-xs text-primary-600 hover:text-primary-700 transition-colors"
+              className="text-xs text-lila hover:text-lila-dark transition-colors"
             >
               He olvidado mi contraseña
             </button>
@@ -278,7 +278,7 @@ export default function AuthForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+            className="w-full bg-lila text-blanco py-2.5 rounded-lg text-sm font-semibold hover:bg-lila-dark transition-colors disabled:opacity-60"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
@@ -348,14 +348,14 @@ export default function AuthForm() {
                   setTermsAccepted(e.target.checked);
                   if (e.target.checked) setTermsError(false);
                 }}
-                className="mt-0.5 w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-400 flex-shrink-0"
+                className="mt-0.5 w-4 h-4 rounded border-negro/20 text-lila focus:ring-lila/30 flex-shrink-0"
               />
-              <span className="text-xs text-slate-600 leading-relaxed">
+              <span className="text-xs text-negro/70 leading-relaxed">
                 He leído y acepto los{" "}
                 <button
                   type="button"
                   onClick={() => setShowTerms(true)}
-                  className="text-primary-600 underline hover:text-primary-700 transition-colors"
+                  className="text-lila underline hover:text-lila-dark transition-colors"
                 >
                   Términos de Uso
                 </button>
@@ -363,7 +363,7 @@ export default function AuthForm() {
                 <button
                   type="button"
                   onClick={() => setShowTerms(true)}
-                  className="text-primary-600 underline hover:text-primary-700 transition-colors"
+                  className="text-lila underline hover:text-lila-dark transition-colors"
                 >
                   Política de Privacidad
                 </button>
@@ -380,7 +380,7 @@ export default function AuthForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+            className="w-full bg-lila text-blanco py-2.5 rounded-lg text-sm font-semibold hover:bg-lila-dark transition-colors disabled:opacity-60"
           >
             {loading ? "Creando cuenta..." : "Crear cuenta"}
           </button>
@@ -418,13 +418,13 @@ function PasswordInput({
         className={`w-full border rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 transition-colors ${
           error
             ? "border-red-400 focus:ring-red-300 bg-red-50"
-            : "border-slate-200 focus:ring-primary-400"
+            : "border-negro/15 focus:ring-lila/30"
         }`}
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-negro/40 hover:text-negro/70 transition-colors"
         tabIndex={-1}
       >
         {visible ? <EyeOff /> : <Eye />}
@@ -461,7 +461,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-negro/80 mb-1">{label}</label>
       {children}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
@@ -477,7 +477,7 @@ function PasswordStrength({ password }: { password: string }) {
   return (
     <div className="flex gap-3 mt-2">
       {checks.map(({ label, ok }) => (
-        <span key={label} className={`flex items-center gap-1 text-xs ${ok ? "text-green-600" : "text-slate-400"}`}>
+        <span key={label} className={`flex items-center gap-1 text-xs ${ok ? "text-green-600" : "text-negro/40"}`}>
           <span>{ok ? "✓" : "·"}</span>
           {label}
         </span>

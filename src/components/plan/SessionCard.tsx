@@ -10,12 +10,12 @@ interface Props {
 }
 
 const TIPO_COLORS: Record<string, string> = {
-  default: "bg-slate-100 text-slate-700",
-  carrera: "bg-blue-100 text-blue-700",
-  fuerza: "bg-orange-100 text-orange-700",
-  hiit: "bg-red-100 text-red-700",
-  movilidad: "bg-purple-100 text-purple-700",
-  descanso: "bg-green-100 text-green-700",
+  default:   "bg-negro/8 text-negro/60",
+  carrera:   "bg-lila/15 text-lila-dark",
+  fuerza:    "bg-amber-100 text-amber-700",
+  hiit:      "bg-red-100 text-red-600",
+  movilidad: "bg-crema text-negro/60",
+  descanso:  "bg-negro/5 text-negro/40",
 };
 
 function tipoColor(tipo: string): string {
@@ -34,16 +34,14 @@ export default function SessionCard({ sesion, completada, onToggle }: Props) {
   return (
     <div
       className={`border rounded-xl overflow-hidden transition-colors ${
-        completada ? "border-primary-200 bg-primary-50" : "border-slate-200 bg-white"
+        completada ? "border-lila/30 bg-lila-light" : "border-negro/10 bg-blanco"
       }`}
     >
       <div className="flex items-center gap-3 p-4">
         <button
           onClick={onToggle}
           className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-            completada
-              ? "bg-primary-600 border-primary-600 text-white"
-              : "border-slate-300 hover:border-primary-400"
+            completada ? "bg-lila border-lila text-blanco" : "border-negro/25 hover:border-lila"
           }`}
           title={completada ? "Marcar como pendiente" : "Marcar como completada"}
         >
@@ -54,87 +52,82 @@ export default function SessionCard({ sesion, completada, onToggle }: Props) {
           )}
         </button>
 
-        <button
-          onClick={() => setOpen(!open)}
-          className="flex-1 flex items-center gap-3 text-left"
-        >
+        <button onClick={() => setOpen(!open)} className="flex-1 flex items-center gap-3 text-left">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`font-semibold text-sm ${completada ? "text-primary-700 line-through" : "text-slate-800"}`}>
+              <span className={`font-semibold text-sm ${completada ? "text-lila line-through" : "text-negro"}`}>
                 {sesion.dia}
               </span>
               <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${tipoColor(sesion.tipo)}`}>
                 {sesion.tipo}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">{sesion.duracion} min</p>
+            <p className="text-xs text-negro/40 mt-0.5">{sesion.duracion} min</p>
           </div>
-          <span className="text-slate-400 text-sm flex-shrink-0">{open ? "−" : "+"}</span>
+          <span className="text-negro/30 text-sm flex-shrink-0">{open ? "−" : "+"}</span>
         </button>
       </div>
 
       {open && (
-        <div className="px-4 pb-4 space-y-4 border-t border-slate-100">
+        <div className="px-4 pb-4 space-y-4 border-t border-negro/8">
           <div className="pt-3">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+            <p className="text-xs font-condensed font-semibold text-negro/40 uppercase tracking-widest mb-1">
               Calentamiento
             </p>
-            <p className="text-sm text-slate-700">{sesion.calentamiento}</p>
+            <p className="text-sm text-negro/70">{sesion.calentamiento}</p>
           </div>
 
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+            <p className="text-xs font-condensed font-semibold text-negro/40 uppercase tracking-widest mb-2">
               Ejercicios
             </p>
             <div className="space-y-3">
               {sesion.ejercicios.map((ej, i) => (
-                <div key={i} className="bg-slate-50 rounded-lg p-3">
+                <div key={i} className="bg-crema rounded-lg p-3">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-sm text-slate-800">{ej.nombre}</p>
+                    <p className="font-medium text-sm text-negro">{ej.nombre}</p>
                     <div className="flex gap-1.5 flex-wrap justify-end">
                       {ej.series && ej.repeticiones && (
-                        <span className="text-xs bg-white border border-slate-200 rounded px-2 py-0.5 text-slate-600 whitespace-nowrap">
+                        <span className="text-xs bg-blanco border border-negro/10 rounded px-2 py-0.5 text-negro/60 whitespace-nowrap">
                           {ej.series} × {ej.repeticiones}
                         </span>
                       )}
                       {ej.duracion && (
-                        <span className="text-xs bg-white border border-slate-200 rounded px-2 py-0.5 text-slate-600 whitespace-nowrap">
+                        <span className="text-xs bg-blanco border border-negro/10 rounded px-2 py-0.5 text-negro/60 whitespace-nowrap">
                           {ej.duracion}
                         </span>
                       )}
                       {ej.descanso && (
-                        <span className="text-xs bg-white border border-slate-200 rounded px-2 py-0.5 text-slate-400 whitespace-nowrap">
+                        <span className="text-xs bg-blanco border border-negro/10 rounded px-2 py-0.5 text-negro/40 whitespace-nowrap">
                           Desc: {ej.descanso}
                         </span>
                       )}
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1.5">{ej.descripcion}</p>
+                  <p className="text-xs text-negro/50 mt-1.5">{ej.descripcion}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+            <p className="text-xs font-condensed font-semibold text-negro/40 uppercase tracking-widest mb-1">
               Vuelta a la calma
             </p>
-            <p className="text-sm text-slate-700">{sesion.vueltaCalma}</p>
+            <p className="text-sm text-negro/70">{sesion.vueltaCalma}</p>
           </div>
 
           {sesion.consejos && (
-            <div className="bg-primary-50 border border-primary-100 rounded-lg p-3">
-              <p className="text-xs font-semibold text-primary-700 mb-1">Consejo del coach</p>
-              <p className="text-xs text-primary-800">{sesion.consejos}</p>
+            <div className="bg-lila-light border border-lila/20 rounded-lg p-3">
+              <p className="text-xs font-condensed font-semibold text-lila mb-1 tracking-wide">Consejo del coach</p>
+              <p className="text-xs text-negro/70">{sesion.consejos}</p>
             </div>
           )}
 
           <button
             onClick={onToggle}
-            className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
-              completada
-                ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                : "bg-primary-600 text-white hover:bg-primary-700"
+            className={`w-full py-2 rounded-lg font-condensed font-bold text-sm transition-colors tracking-wide ${
+              completada ? "bg-negro/8 text-negro/60 hover:bg-negro/15" : "bg-negro text-blanco hover:bg-negro/80"
             }`}
           >
             {completada ? "Marcar como pendiente" : "Marcar como completada"}

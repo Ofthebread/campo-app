@@ -41,14 +41,14 @@ function PasswordInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full bg-campo-card border rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-campo-lime/60 focus:ring-1 focus:ring-campo-lime/30 transition-colors pr-12 ${
-            error ? "border-red-500/50" : "border-white/10"
+          className={`w-full bg-blanco border rounded-xl px-4 py-3 text-negro placeholder-negro/30 text-sm focus:outline-none focus:border-lila/60 focus:ring-1 focus:ring-lila/30 transition-colors pr-12 ${
+            error ? "border-red-500/50" : "border-negro/10"
           }`}
         />
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-negro/30 hover:text-negro/60 transition-colors"
         >
           {visible ? <EyeOffIcon /> : <EyeIcon />}
         </button>
@@ -68,7 +68,7 @@ function PasswordStrength({ password }: { password: string }) {
   return (
     <div className="flex flex-col gap-1 mt-2">
       {checks.map((c) => (
-        <span key={c.label} className={`text-xs flex items-center gap-1.5 ${c.ok ? "text-campo-lime" : "text-white/30"}`}>
+        <span key={c.label} className={`text-xs flex items-center gap-1.5 ${c.ok ? "text-lila" : "text-negro/30"}`}>
           <span>{c.ok ? "✓" : "○"}</span>
           {c.label}
         </span>
@@ -129,13 +129,13 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-campo-dark flex flex-col items-center justify-center px-5">
+    <div className="min-h-screen bg-crema flex flex-col items-center justify-center px-5">
       <div className="w-full max-w-sm">
         <div className="mb-8">
-          <h1 className="font-condensed text-3xl font-bold text-white tracking-wide mb-1">
+          <h1 className="font-condensed text-3xl font-bold text-negro tracking-wide mb-1">
             CAMPO APP
           </h1>
-          <p className="text-white/40 text-sm">Tu coach de running con IA</p>
+          <p className="text-negro/40 text-sm">Tu coach de running con IA</p>
         </div>
 
         {uiState === "loading" && (
@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="w-3 h-3 bg-campo-lime rounded-full animate-bounce"
+                className="w-3 h-3 bg-lila rounded-full animate-bounce"
                 style={{ animationDelay: `${i * 150}ms` }}
               />
             ))}
@@ -151,16 +151,16 @@ export default function ResetPasswordPage() {
         )}
 
         {uiState === "error" && (
-          <div className="bg-campo-card border border-red-500/30 rounded-2xl p-6 text-center">
+          <div className="bg-blanco border border-red-500/30 rounded-2xl p-6 text-center">
             <p className="text-red-400 font-condensed text-lg font-bold tracking-wide mb-2">
               ENLACE INVÁLIDO
             </p>
-            <p className="text-white/50 text-sm mb-6">
+            <p className="text-negro/50 text-sm mb-6">
               El enlace de recuperación ha caducado o ya fue usado. Solicita uno nuevo.
             </p>
             <button
               onClick={() => router.push("/auth")}
-              className="w-full bg-campo-lime text-campo-darker font-condensed font-bold text-lg py-3 rounded-xl hover:bg-campo-lime-dark transition-colors tracking-wide"
+              className="w-full bg-lila text-negro font-condensed font-bold text-lg py-3 rounded-xl hover:bg-lila-dark transition-colors tracking-wide"
             >
               VOLVER AL INICIO
             </button>
@@ -168,11 +168,11 @@ export default function ResetPasswordPage() {
         )}
 
         {uiState === "ready" && (
-          <div className="bg-campo-card border border-white/10 rounded-2xl p-6">
-            <h2 className="font-condensed text-xl font-bold text-white tracking-wide mb-1">
+          <div className="bg-blanco border border-negro/10 rounded-2xl p-6">
+            <h2 className="font-condensed text-xl font-bold text-negro tracking-wide mb-1">
               NUEVA CONTRASEÑA
             </h2>
-            <p className="text-white/40 text-sm mb-6">Elige una contraseña segura para tu cuenta.</p>
+            <p className="text-negro/40 text-sm mb-6">Elige una contraseña segura para tu cuenta.</p>
 
             {globalError && (
               <div className="mb-4 p-3 bg-red-900/30 border border-red-500/30 rounded-xl text-sm text-red-400">
@@ -182,7 +182,7 @@ export default function ResetPasswordPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block font-condensed text-sm font-semibold text-campo-lime mb-2 tracking-wide uppercase">
+                <label className="block font-condensed text-sm font-semibold text-lila mb-2 tracking-wide uppercase">
                   Nueva contraseña
                 </label>
                 <PasswordInput
@@ -195,7 +195,7 @@ export default function ResetPasswordPage() {
               </div>
 
               <div>
-                <label className="block font-condensed text-sm font-semibold text-campo-lime mb-2 tracking-wide uppercase">
+                <label className="block font-condensed text-sm font-semibold text-lila mb-2 tracking-wide uppercase">
                   Repite la contraseña
                 </label>
                 <PasswordInput
@@ -209,7 +209,7 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-campo-lime text-campo-darker font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-campo-lime-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide mt-2"
+                className="w-full bg-lila text-negro font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-lila-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide mt-2"
               >
                 {submitting ? "GUARDANDO..." : "GUARDAR CONTRASEÑA"}
               </button>
@@ -218,12 +218,12 @@ export default function ResetPasswordPage() {
         )}
 
         {uiState === "success" && (
-          <div className="bg-campo-card border border-campo-lime/30 rounded-2xl p-6 text-center">
-            <div className="text-campo-lime text-4xl mb-3">✓</div>
-            <p className="font-condensed text-xl font-bold text-white tracking-wide mb-2">
+          <div className="bg-blanco border border-lila/30 rounded-2xl p-6 text-center">
+            <div className="text-lila text-4xl mb-3">✓</div>
+            <p className="font-condensed text-xl font-bold text-negro tracking-wide mb-2">
               ¡CONTRASEÑA ACTUALIZADA!
             </p>
-            <p className="text-white/50 text-sm">
+            <p className="text-negro/50 text-sm">
               Redirigiendo a la app...
             </p>
           </div>

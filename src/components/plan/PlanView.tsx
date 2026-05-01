@@ -42,59 +42,61 @@ export default function PlanView({ plan, planId, onReset, onPlanUpdate }: Props)
   });
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+    <div className="space-y-5">
+      {/* plan card */}
+      <div className="bg-blanco rounded-2xl border border-negro/10 p-5">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{plan.titulo}</h2>
-            <p className="text-sm text-slate-500 mt-1">{plan.objetivo}</p>
+            <h2 className="font-condensed text-xl font-bold text-negro tracking-wide">{plan.titulo}</h2>
+            <p className="text-sm text-negro/50 mt-1">{plan.objetivo}</p>
           </div>
           <button
             onClick={onReset}
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors whitespace-nowrap"
+            className="text-xs text-negro/40 hover:text-negro transition-colors whitespace-nowrap font-condensed tracking-wide"
           >
             Nuevo plan
           </button>
         </div>
 
-        <div className="flex gap-6 pt-4 border-t border-slate-100 mb-4">
+        <div className="flex gap-6 pt-4 border-t border-negro/8 mb-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary-600">{plan.totalSemanas}</p>
-            <p className="text-xs text-slate-500">semanas</p>
+            <p className="font-condensed text-2xl font-bold text-lila">{plan.totalSemanas}</p>
+            <p className="text-xs text-negro/40">semanas</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary-600">
+            <p className="font-condensed text-2xl font-bold text-lila">
               {plan.semanas[0]?.sesiones.length ?? 0}
             </p>
-            <p className="text-xs text-slate-500">días/semana</p>
+            <p className="text-xs text-negro/40">días/semana</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary-600">{completadas.size}</p>
-            <p className="text-xs text-slate-500">completadas</p>
+            <p className="font-condensed text-2xl font-bold text-lila">{completadas.size}</p>
+            <p className="text-xs text-negro/40">completadas</p>
           </div>
         </div>
 
         <div>
-          <div className="flex justify-between text-xs text-slate-500 mb-1">
+          <div className="flex justify-between text-xs text-negro/40 mb-1">
             <span>Progreso general</span>
             <span>{porcentaje}%</span>
           </div>
-          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-negro/8 rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary-500 rounded-full transition-all duration-500"
+              className="h-full bg-lila rounded-full transition-all duration-500"
               style={{ width: `${porcentaje}%` }}
             />
           </div>
         </div>
       </div>
 
-      <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+      {/* tabs */}
+      <div className="flex gap-1 bg-negro/5 p-1 rounded-xl">
         {(["plan", "consejos", "coach"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === t ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            className={`flex-1 py-2 rounded-lg font-condensed font-bold text-sm tracking-wide transition-all ${
+              tab === t ? "bg-blanco text-negro shadow-sm" : "text-negro/40 hover:text-negro"
             }`}
           >
             {t === "plan" ? "Plan" : t === "consejos" ? "Consejos" : "Coach IA"}
@@ -113,10 +115,10 @@ export default function PlanView({ plan, planId, onReset, onPlanUpdate }: Props)
                 <button
                   key={i}
                   onClick={() => setSemanaActiva(i)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg font-condensed text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 tracking-wide ${
                     semanaActiva === i
-                      ? "bg-primary-600 text-white"
-                      : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
+                      ? "bg-negro text-blanco"
+                      : "bg-blanco border border-negro/15 text-negro/60 hover:border-negro/30"
                   }`}
                 >
                   Sem. {s.numero}
@@ -130,32 +132,30 @@ export default function PlanView({ plan, planId, onReset, onPlanUpdate }: Props)
           <WeekCard
             semana={plan.semanas[semanaActiva]}
             completadas={completadas}
-            onToggle={(dia, tipo) =>
-              toggle(plan.semanas[semanaActiva].numero, dia, tipo)
-            }
+            onToggle={(dia, tipo) => toggle(plan.semanas[semanaActiva].numero, dia, tipo)}
           />
         </div>
       )}
 
       {tab === "consejos" && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h3 className="font-semibold text-slate-800 mb-3">Consejos generales</h3>
+          <div className="bg-blanco rounded-2xl border border-negro/10 p-5">
+            <h3 className="font-condensed font-bold text-negro tracking-wide mb-3">Consejos generales</h3>
             <ul className="space-y-2">
               {plan.consejosGenerales.map((c, i) => (
-                <li key={i} className="flex gap-2 text-sm text-slate-700">
-                  <span className="text-primary-500 font-bold mt-0.5">·</span>
+                <li key={i} className="flex gap-2 text-sm text-negro/70">
+                  <span className="text-lila font-bold mt-0.5">·</span>
                   {c}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h3 className="font-semibold text-slate-800 mb-3">Nutrición</h3>
+          <div className="bg-blanco rounded-2xl border border-negro/10 p-5">
+            <h3 className="font-condensed font-bold text-negro tracking-wide mb-3">Nutrición</h3>
             <ul className="space-y-2">
               {plan.nutricion.map((n, i) => (
-                <li key={i} className="flex gap-2 text-sm text-slate-700">
-                  <span className="text-primary-500 font-bold mt-0.5">·</span>
+                <li key={i} className="flex gap-2 text-sm text-negro/70">
+                  <span className="text-lila font-bold mt-0.5">·</span>
                   {n}
                 </li>
               ))}
@@ -166,7 +166,7 @@ export default function PlanView({ plan, planId, onReset, onPlanUpdate }: Props)
 
       {tab === "coach" && (
         <div>
-          <p className="text-xs text-slate-500 mb-3">
+          <p className="text-xs text-negro/40 mb-3">
             El coach conoce tu plan completo y puede responder preguntas sobre él.
           </p>
           <ChatInterface planContext={planContext} onPlanUpdate={onPlanUpdate} />

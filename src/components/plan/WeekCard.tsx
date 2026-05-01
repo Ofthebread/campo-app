@@ -17,16 +17,16 @@ export default function WeekCard({ semana, completadas, onToggle }: Props) {
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-3">
-            <span className="bg-primary-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+            <span className="bg-lila text-blanco font-condensed text-xs font-bold px-2.5 py-1 rounded-full tracking-wide">
               Semana {semana.numero}
             </span>
-            <h3 className="font-semibold text-slate-800 text-sm">{semana.descripcion}</h3>
+            <h3 className="font-semibold text-negro text-sm">{semana.descripcion}</h3>
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-negro/40">
             {completadasCount}/{semana.sesiones.length}
           </span>
         </div>
-        <p className="text-xs text-slate-500">{semana.objetivoSemana}</p>
+        <p className="text-xs text-negro/50">{semana.objetivoSemana}</p>
       </div>
       <div className="space-y-2">
         {semana.sesiones.map((sesion, i) => (

@@ -9,25 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: "#16a34a",
-          50: "#f0fdf4",
-          100: "#dcfce7",
-          200: "#bbf7d0",
-          400: "#4ade80",
-          500: "#22c55e",
-          600: "#16a34a",
-          700: "#15803d",
-          800: "#166534",
-        },
-        campo: {
-          green: "#16a34a",
-          dark: "#0b1f13",
-          darker: "#071409",
-          card: "#122b1a",
-          lime: "#a3e635",
-          "lime-dark": "#84cc16",
-        },
+        crema: "#F5F0E8",
+        blanco: "#FFFFFF",
+        negro: "#1A1A1A",
+        lila: "#9B8EC4",
+        "lila-dark": "#7F72AB",
+        "lila-light": "#EAE6F5",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],

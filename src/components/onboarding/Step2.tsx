@@ -33,18 +33,12 @@ function pesoError(peso: number | undefined): string | null {
 export default function Step2({ data, onChange, onNext, onBack }: Props) {
   const edadErr = edadError(data.edad);
   const pesoErr = pesoError(data.peso);
-
-  const isValid =
-    data.volumenCarrera &&
-    data.edad &&
-    data.peso &&
-    !edadErr &&
-    !pesoErr;
+  const isValid = data.volumenCarrera && data.edad && data.peso && !edadErr && !pesoErr;
 
   return (
     <div className="space-y-6">
       <div>
-        <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+        <label className="block font-condensed text-lg font-semibold text-negro tracking-wide uppercase mb-3">
           ¿Cuánto corres ahora mismo?
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -54,8 +48,8 @@ export default function Step2({ data, onChange, onNext, onBack }: Props) {
               onClick={() => onChange({ ...data, volumenCarrera: o.value })}
               className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
                 data.volumenCarrera === o.value
-                  ? "border-campo-lime bg-campo-lime/10 text-campo-lime"
-                  : "border-white/10 text-white/60 hover:border-white/30 hover:text-white"
+                  ? "border-lila bg-lila-light text-lila"
+                  : "border-negro/15 text-negro/60 bg-blanco hover:border-negro/30 hover:text-negro"
               }`}
             >
               {o.label}
@@ -65,7 +59,7 @@ export default function Step2({ data, onChange, onNext, onBack }: Props) {
       </div>
 
       <div>
-        <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+        <label className="block font-condensed text-lg font-semibold text-negro tracking-wide uppercase mb-3">
           Lesiones o limitaciones físicas
         </label>
         <input
@@ -73,13 +67,13 @@ export default function Step2({ data, onChange, onNext, onBack }: Props) {
           value={data.lesiones ?? ""}
           onChange={(e) => onChange({ ...data, lesiones: e.target.value })}
           placeholder="Rodilla, espalda, ninguna... (opcional)"
-          className="w-full bg-campo-card border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:border-campo-lime/60 focus:ring-1 focus:ring-campo-lime/30 transition-colors"
+          className="w-full bg-blanco border border-negro/15 rounded-xl px-4 py-3 text-negro placeholder-negro/30 text-sm focus:outline-none focus:border-lila/60 focus:ring-1 focus:ring-lila/20 transition-colors"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+          <label className="block font-condensed text-lg font-semibold text-negro tracking-wide uppercase mb-3">
             Edad
           </label>
           <div className="relative">
@@ -88,24 +82,18 @@ export default function Step2({ data, onChange, onNext, onBack }: Props) {
               min={10}
               max={99}
               value={data.edad ?? ""}
-              onChange={(e) =>
-                onChange({ ...data, edad: e.target.value ? Number(e.target.value) : undefined })
-              }
+              onChange={(e) => onChange({ ...data, edad: e.target.value ? Number(e.target.value) : undefined })}
               placeholder="28"
-              className={`w-full bg-campo-card border rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-1 transition-colors pr-12 ${
-                edadErr
-                  ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
-                  : "border-white/10 focus:border-campo-lime/60 focus:ring-campo-lime/30"
+              className={`w-full bg-blanco border rounded-xl px-4 py-3 text-negro placeholder-negro/30 text-sm focus:outline-none focus:ring-1 transition-colors pr-12 ${
+                edadErr ? "border-red-400 focus:border-red-400 focus:ring-red-200" : "border-negro/15 focus:border-lila/60 focus:ring-lila/20"
               }`}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm pointer-events-none">
-              años
-            </span>
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-negro/30 text-sm pointer-events-none">años</span>
           </div>
-          {edadErr && <p className="mt-1 text-xs text-red-400">{edadErr}</p>}
+          {edadErr && <p className="mt-1 text-xs text-red-500">{edadErr}</p>}
         </div>
         <div>
-          <label className="block font-condensed text-lg font-semibold text-campo-lime mb-3 tracking-wide uppercase">
+          <label className="block font-condensed text-lg font-semibold text-negro tracking-wide uppercase mb-3">
             Peso
           </label>
           <div className="relative">
@@ -114,35 +102,29 @@ export default function Step2({ data, onChange, onNext, onBack }: Props) {
               min={30}
               max={250}
               value={data.peso ?? ""}
-              onChange={(e) =>
-                onChange({ ...data, peso: e.target.value ? Number(e.target.value) : undefined })
-              }
+              onChange={(e) => onChange({ ...data, peso: e.target.value ? Number(e.target.value) : undefined })}
               placeholder="70"
-              className={`w-full bg-campo-card border rounded-xl px-4 py-3 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-1 transition-colors pr-10 ${
-                pesoErr
-                  ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
-                  : "border-white/10 focus:border-campo-lime/60 focus:ring-campo-lime/30"
+              className={`w-full bg-blanco border rounded-xl px-4 py-3 text-negro placeholder-negro/30 text-sm focus:outline-none focus:ring-1 transition-colors pr-10 ${
+                pesoErr ? "border-red-400 focus:border-red-400 focus:ring-red-200" : "border-negro/15 focus:border-lila/60 focus:ring-lila/20"
               }`}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm pointer-events-none">
-              kg
-            </span>
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-negro/30 text-sm pointer-events-none">kg</span>
           </div>
-          {pesoErr && <p className="mt-1 text-xs text-red-400">{pesoErr}</p>}
+          {pesoErr && <p className="mt-1 text-xs text-red-500">{pesoErr}</p>}
         </div>
       </div>
 
       <div className="flex gap-3">
         <button
           onClick={onBack}
-          className="flex-1 border border-white/20 text-white/60 font-condensed font-bold text-lg py-3.5 rounded-xl hover:border-white/40 hover:text-white transition-colors tracking-wide"
+          className="flex-1 border border-negro/20 text-negro/60 font-condensed font-bold text-lg py-3.5 rounded-xl hover:border-negro/40 hover:text-negro transition-colors tracking-wide"
         >
           ATRÁS
         </button>
         <button
           onClick={onNext}
           disabled={!isValid}
-          className="flex-[2] bg-campo-lime text-campo-darker font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-campo-lime-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed tracking-wide"
+          className="flex-[2] bg-negro text-blanco font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-negro/80 transition-colors disabled:opacity-30 disabled:cursor-not-allowed tracking-wide"
         >
           SIGUIENTE
         </button>

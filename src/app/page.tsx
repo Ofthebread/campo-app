@@ -17,9 +17,7 @@ export default function HomePage() {
   const [planLoading, setPlanLoading] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth");
-    }
+    if (!loading && !user) router.push("/auth");
   }, [user, loading, router]);
 
   useEffect(() => {
@@ -27,10 +25,7 @@ export default function HomePage() {
     setPlanLoading(true);
     getActivePlan()
       .then((result) => {
-        if (result) {
-          setPlan(result.plan);
-          setPlanId(result.id);
-        }
+        if (result) { setPlan(result.plan); setPlanId(result.id); }
       })
       .finally(() => setPlanLoading(false));
   }, [user]);
@@ -47,12 +42,12 @@ export default function HomePage() {
 
   if (loading || planLoading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex gap-1.5">
+      <main className="min-h-screen flex items-center justify-center bg-crema">
+        <div className="flex gap-2">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="w-2.5 h-2.5 bg-primary-500 rounded-full animate-bounce"
+              className="w-3 h-3 bg-lila rounded-full animate-bounce"
               style={{ animationDelay: `${i * 150}ms` }}
             />
           ))}
@@ -64,19 +59,19 @@ export default function HomePage() {
   if (!user) return null;
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="bg-campo-card border-b border-white/10 px-5 py-3.5 flex items-center justify-between">
-        <span className="font-condensed font-bold text-xl text-white tracking-wide">CAMPO APP</span>
-        <div className="flex items-center gap-4">
+    <main className="min-h-screen bg-crema">
+      <header className="bg-blanco border-b border-negro/10 px-5 py-3.5 flex items-center justify-between">
+        <span className="font-condensed font-bold text-xl text-negro tracking-wide">CAMPO APP</span>
+        <div className="flex items-center gap-5">
           <button
             onClick={() => router.push("/perfil")}
-            className="text-xs text-white/40 hover:text-white transition-colors font-condensed tracking-wide"
+            className="text-xs text-negro/50 hover:text-negro transition-colors font-condensed tracking-wide"
           >
             Mi perfil
           </button>
           <button
             onClick={handleSignOut}
-            className="text-xs text-white/40 hover:text-white transition-colors font-condensed tracking-wide"
+            className="text-xs text-negro/50 hover:text-negro transition-colors font-condensed tracking-wide"
           >
             Cerrar sesión
           </button>

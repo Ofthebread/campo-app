@@ -53,7 +53,6 @@ export default function OnboardingForm({ onPlanCreated }: Props) {
 
       const data = await res.json();
       const planGenerado: PlanEntrenamiento = data.plan;
-
       const id = await savePlan(planGenerado);
 
       await updateProfile({
@@ -71,14 +70,14 @@ export default function OnboardingForm({ onPlanCreated }: Props) {
   const currentStepIndex = step === "loading" ? 4 : (step as number) - 1;
 
   return (
-    <div className="min-h-screen bg-campo-dark flex flex-col">
+    <div className="min-h-screen bg-crema flex flex-col">
       <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-5 py-8">
 
         <div className="mb-8">
-          <h1 className="font-condensed text-3xl font-bold text-white tracking-wide mb-1">
+          <h1 className="font-condensed text-3xl font-bold text-negro tracking-wide mb-1">
             CAMPO APP
           </h1>
-          <p className="text-white/40 text-sm">Tu coach de running con IA</p>
+          <p className="text-negro/40 text-sm">Tu coach de running con IA</p>
         </div>
 
         {step !== "loading" && (
@@ -88,19 +87,19 @@ export default function OnboardingForm({ onPlanCreated }: Props) {
                 <div
                   key={s}
                   className={`flex-1 h-1 rounded-full transition-all duration-300 ${
-                    s <= currentStepIndex + 1 ? "bg-campo-lime" : "bg-white/10"
+                    s <= currentStepIndex + 1 ? "bg-lila" : "bg-negro/10"
                   }`}
                 />
               ))}
             </div>
-            <p className="text-white/40 text-xs font-condensed tracking-widest uppercase">
+            <p className="text-negro/40 text-xs font-condensed tracking-widest uppercase">
               Paso {step} de 4 · {STEP_LABELS[currentStepIndex]}
             </p>
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/30 border border-red-500/30 rounded-xl text-sm text-red-400">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
             {error}. Inténtalo de nuevo.
           </div>
         )}
@@ -124,16 +123,16 @@ export default function OnboardingForm({ onPlanCreated }: Props) {
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="w-3 h-3 bg-campo-lime rounded-full animate-bounce"
+                  className="w-3 h-3 bg-lila rounded-full animate-bounce"
                   style={{ animationDelay: `${i * 150}ms` }}
                 />
               ))}
             </div>
             <div className="text-center">
-              <p className="font-condensed text-xl font-bold text-white tracking-wide">
+              <p className="font-condensed text-xl font-bold text-negro tracking-wide">
                 GENERANDO TU PLAN
               </p>
-              <p className="text-white/40 text-sm mt-1">Puede tardar unos segundos</p>
+              <p className="text-negro/40 text-sm mt-1">Puede tardar unos segundos</p>
             </div>
           </div>
         )}

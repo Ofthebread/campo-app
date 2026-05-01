@@ -2,10 +2,12 @@ import AuthForm from "@/components/auth/AuthForm";
 
 export default function AuthPage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-crema px-4">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-primary-600 mb-1">Campo App</h1>
-        <p className="text-slate-500 text-sm">Tu coach de entrenamiento con IA</p>
+        <h1 className="font-condensed text-4xl font-bold text-negro tracking-wide mb-1">
+          CAMPO APP
+        </h1>
+        <p className="text-negro/50 text-sm">Tu coach de running con IA</p>
       </div>
       <AuthForm />
     </main>

@@ -88,7 +88,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block font-condensed text-xs font-semibold text-campo-lime mb-1.5 tracking-widest uppercase">
+      <label className="block font-condensed text-xs font-semibold text-lila mb-1.5 tracking-widest uppercase">
         {label}
       </label>
       {children}
@@ -120,10 +120,10 @@ function TextInput({
       onBlur={onBlur}
       placeholder={placeholder}
       disabled={disabled}
-      className={`w-full bg-campo-dark border rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:ring-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+      className={`w-full bg-crema border rounded-xl px-4 py-3 text-negro placeholder-negro/20 text-sm focus:outline-none focus:ring-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
         error
           ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
-          : "border-white/10 focus:border-campo-lime/50 focus:ring-campo-lime/20"
+          : "border-negro/10 focus:border-lila/50 focus:ring-lila/20"
       }`}
     />
   );
@@ -152,14 +152,14 @@ function NumberInput({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         placeholder={placeholder}
-        className={`w-full bg-campo-dark border rounded-xl px-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:ring-1 transition-colors pr-12 ${
+        className={`w-full bg-crema border rounded-xl px-4 py-3 text-negro placeholder-negro/20 text-sm focus:outline-none focus:ring-1 transition-colors pr-12 ${
           error
             ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
-            : "border-white/10 focus:border-campo-lime/50 focus:ring-campo-lime/20"
+            : "border-negro/10 focus:border-lila/50 focus:ring-lila/20"
         }`}
       />
       {suffix && (
-        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm pointer-events-none">
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-negro/30 text-sm pointer-events-none">
           {suffix}
         </span>
       )}
@@ -208,24 +208,24 @@ function PlanCard({
     <div
       className={`rounded-2xl border p-4 transition-all ${
         plan.activo
-          ? "border-campo-lime/40 bg-campo-lime/5"
-          : "border-white/10 bg-campo-dark"
+          ? "border-lila/40 bg-lila/5"
+          : "border-negro/10 bg-crema"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {plan.activo && (
-              <span className="text-[10px] font-condensed font-bold tracking-widest text-campo-darker bg-campo-lime px-2 py-0.5 rounded-full uppercase">
+              <span className="text-[10px] font-condensed font-bold tracking-widest text-negro bg-lila px-2 py-0.5 rounded-full uppercase">
                 Activo
               </span>
             )}
-            <span className="text-white/30 text-xs">{formatDate(plan.created_at)}</span>
+            <span className="text-negro/30 text-xs">{formatDate(plan.created_at)}</span>
           </div>
-          <p className="font-condensed font-bold text-white text-base tracking-wide leading-tight truncate">
+          <p className="font-condensed font-bold text-negro text-base tracking-wide leading-tight truncate">
             {plan.titulo}
           </p>
-          <p className="text-white/40 text-xs mt-1">
+          <p className="text-negro/40 text-xs mt-1">
             {plan.plan_data.totalSemanas} semanas · {totalSesiones} sesiones · Nivel{" "}
             {plan.plan_data.nivel}
           </p>
@@ -237,7 +237,7 @@ function PlanCard({
           <button
             onClick={handleActivate}
             disabled={activating}
-            className="flex-1 py-2 rounded-xl border border-campo-lime/40 text-campo-lime font-condensed font-bold text-sm tracking-wide hover:bg-campo-lime/10 transition-colors disabled:opacity-50"
+            className="flex-1 py-2 rounded-xl border border-lila/40 text-lila font-condensed font-bold text-sm tracking-wide hover:bg-lila/10 transition-colors disabled:opacity-50"
           >
             {activating ? "..." : "ACTIVAR"}
           </button>
@@ -247,7 +247,7 @@ function PlanCard({
             <button
               onClick={() => setConfirmDelete(false)}
               disabled={deleting}
-              className="flex-1 py-2 rounded-xl border border-white/20 text-white/50 font-condensed font-bold text-sm tracking-wide hover:border-white/40 transition-colors disabled:opacity-50"
+              className="flex-1 py-2 rounded-xl border border-negro/20 text-negro/50 font-condensed font-bold text-sm tracking-wide hover:border-negro/40 transition-colors disabled:opacity-50"
             >
               CANCELAR
             </button>
@@ -262,7 +262,7 @@ function PlanCard({
         ) : (
           <button
             onClick={() => setConfirmDelete(true)}
-            className={`py-2 px-4 rounded-xl border border-white/10 text-white/30 font-condensed font-bold text-sm tracking-wide hover:border-red-500/40 hover:text-red-400 transition-colors ${
+            className={`py-2 px-4 rounded-xl border border-negro/10 text-negro/30 font-condensed font-bold text-sm tracking-wide hover:border-red-500/40 hover:text-red-400 transition-colors ${
               plan.activo ? "flex-1" : ""
             }`}
           >
@@ -394,12 +394,12 @@ export default function PerfilPage() {
 
   if (loading || profileLoading) {
     return (
-      <div className="min-h-screen bg-campo-dark flex items-center justify-center">
+      <div className="min-h-screen bg-crema flex items-center justify-center">
         <div className="flex gap-2">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="w-3 h-3 bg-campo-lime rounded-full animate-bounce"
+              className="w-3 h-3 bg-lila rounded-full animate-bounce"
               style={{ animationDelay: `${i * 150}ms` }}
             />
           ))}
@@ -411,35 +411,35 @@ export default function PerfilPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-campo-dark flex flex-col">
+    <div className="min-h-screen bg-crema flex flex-col">
       <div className="max-w-lg mx-auto w-full px-5 py-8 flex-1 flex flex-col">
 
         {/* header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-condensed text-3xl font-bold text-white tracking-wide">
+            <h1 className="font-condensed text-3xl font-bold text-negro tracking-wide">
               MI PERFIL
             </h1>
-            <p className="text-white/40 text-sm">{profile?.email ?? user.email}</p>
+            <p className="text-negro/40 text-sm">{profile?.email ?? user.email}</p>
           </div>
           <button
             onClick={() => router.push("/")}
-            className="text-white/40 hover:text-white transition-colors text-sm font-condensed tracking-wide"
+            className="text-negro/40 hover:text-negro transition-colors text-sm font-condensed tracking-wide"
           >
             ← VOLVER
           </button>
         </div>
 
         {/* tabs */}
-        <div className="flex gap-1 mb-6 bg-campo-card rounded-xl p-1">
+        <div className="flex gap-1 mb-6 bg-blanco rounded-xl p-1">
           {(["datos", "programas"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 py-2 rounded-lg font-condensed font-bold text-sm tracking-widest uppercase transition-all ${
                 tab === t
-                  ? "bg-campo-lime text-campo-darker"
-                  : "text-white/40 hover:text-white"
+                  ? "bg-lila text-negro"
+                  : "text-negro/40 hover:text-negro"
               }`}
             >
               {t === "datos" ? "Mis datos" : "Programas"}
@@ -450,8 +450,8 @@ export default function PerfilPage() {
         {/* ── tab: datos ── */}
         {tab === "datos" && (
           <div className="flex-1 flex flex-col gap-5">
-            <div className="bg-campo-card rounded-2xl border border-white/10 p-5 space-y-4">
-              <p className="font-condensed text-xs text-white/30 tracking-widest uppercase">
+            <div className="bg-blanco rounded-2xl border border-negro/10 p-5 space-y-4">
+              <p className="font-condensed text-xs text-negro/30 tracking-widest uppercase">
                 Información personal
               </p>
 
@@ -497,10 +497,10 @@ export default function PerfilPage() {
                     value={fechaNacimiento}
                     onChange={(e) => setFechaNacimiento(e.target.value)}
                     onBlur={() => handleBlur("fechaNacimiento")}
-                    className={`w-full bg-campo-dark border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-1 transition-colors ${
+                    className={`w-full bg-crema border rounded-xl px-4 py-3 text-negro text-sm focus:outline-none focus:ring-1 transition-colors ${
                       getError("fechaNacimiento")
                         ? "border-red-500/60 focus:border-red-500/80 focus:ring-red-500/20"
-                        : "border-white/10 focus:border-campo-lime/50 focus:ring-campo-lime/20"
+                        : "border-negro/10 focus:border-lila/50 focus:ring-lila/20"
                     }`}
                   />
                 </Field>
@@ -508,7 +508,7 @@ export default function PerfilPage() {
                   <select
                     value={genero}
                     onChange={(e) => setGenero(e.target.value)}
-                    className="w-full bg-campo-dark border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-campo-lime/50 focus:ring-1 focus:ring-campo-lime/20 transition-colors appearance-none"
+                    className="w-full bg-crema border border-negro/10 rounded-xl px-4 py-3 text-negro text-sm focus:outline-none focus:border-lila/50 focus:ring-1 focus:ring-lila/20 transition-colors appearance-none"
                   >
                     <option value="">Sin especificar</option>
                     <option value="hombre">Hombre</option>
@@ -519,8 +519,8 @@ export default function PerfilPage() {
               </div>
             </div>
 
-            <div className="bg-campo-card rounded-2xl border border-white/10 p-5 space-y-4">
-              <p className="font-condensed text-xs text-white/30 tracking-widest uppercase">
+            <div className="bg-blanco rounded-2xl border border-negro/10 p-5 space-y-4">
+              <p className="font-condensed text-xs text-negro/30 tracking-widest uppercase">
                 Datos físicos
               </p>
               <div className="grid grid-cols-2 gap-4">
@@ -547,8 +547,8 @@ export default function PerfilPage() {
               </div>
             </div>
 
-            <div className="bg-campo-card rounded-2xl border border-white/10 p-5 space-y-4">
-              <p className="font-condensed text-xs text-white/30 tracking-widest uppercase">
+            <div className="bg-blanco rounded-2xl border border-negro/10 p-5 space-y-4">
+              <p className="font-condensed text-xs text-negro/30 tracking-widest uppercase">
                 Ubicación
               </p>
               <div className="grid grid-cols-2 gap-4">
@@ -570,7 +570,7 @@ export default function PerfilPage() {
             <button
               onClick={handleSaveProfile}
               disabled={saving}
-              className="w-full bg-campo-lime text-campo-darker font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-campo-lime-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
+              className="w-full bg-lila text-negro font-condensed font-bold text-lg py-3.5 rounded-xl hover:bg-lila-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
             >
               {saving ? "GUARDANDO..." : saved ? "✓ GUARDADO" : "GUARDAR CAMBIOS"}
             </button>
@@ -585,29 +585,29 @@ export default function PerfilPage() {
                 {[0, 1, 2].map((i) => (
                   <span
                     key={i}
-                    className="w-3 h-3 bg-campo-lime rounded-full animate-bounce"
+                    className="w-3 h-3 bg-lila rounded-full animate-bounce"
                     style={{ animationDelay: `${i * 150}ms` }}
                   />
                 ))}
               </div>
             ) : planes.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
-                <p className="font-condensed text-xl font-bold text-white/30 tracking-wide mb-2">
+                <p className="font-condensed text-xl font-bold text-negro/30 tracking-wide mb-2">
                   SIN PROGRAMAS
                 </p>
-                <p className="text-white/20 text-sm">
+                <p className="text-negro/20 text-sm">
                   Todavía no tienes ningún programa creado.
                 </p>
                 <button
                   onClick={() => router.push("/")}
-                  className="mt-6 px-6 py-3 rounded-xl border border-campo-lime/40 text-campo-lime font-condensed font-bold text-sm tracking-wide hover:bg-campo-lime/10 transition-colors"
+                  className="mt-6 px-6 py-3 rounded-xl border border-lila/40 text-lila font-condensed font-bold text-sm tracking-wide hover:bg-lila/10 transition-colors"
                 >
                   CREAR PROGRAMA
                 </button>
               </div>
             ) : (
               <>
-                <p className="font-condensed text-xs text-white/30 tracking-widest uppercase mb-1">
+                <p className="font-condensed text-xs text-negro/30 tracking-widest uppercase mb-1">
                   {planes.length} {planes.length === 1 ? "programa" : "programas"}
                 </p>
                 {planes.map((plan) => (
