@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
+import { createAdminClient } from "./supabase-admin";
 
 // Verify the JWT sent in the Authorization header and return the user.
 // Returns null if the token is missing or invalid.
@@ -17,6 +18,16 @@ export async function getRequestUser(req: NextRequest): Promise<User | null> {
   const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) return null;
   return user;
+}
+
+export async function isAdmin(userId: string): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return data?.role === "admin";
 }
 
 export function unauthorizedResponse() {

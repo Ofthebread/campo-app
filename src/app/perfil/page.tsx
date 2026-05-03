@@ -422,12 +422,22 @@ export default function PerfilPage() {
             </h1>
             <p className="text-negro/40 text-sm">{profile?.email ?? user.email}</p>
           </div>
-          <button
-            onClick={() => router.push("/")}
-            className="text-negro/40 hover:text-negro transition-colors text-sm font-condensed tracking-wide"
-          >
-            ← VOLVER
-          </button>
+          <div className="flex items-center gap-3">
+            {profile?.role === "admin" && (
+              <button
+                onClick={() => router.push("/admin")}
+                className="font-condensed font-bold text-xs tracking-widest uppercase bg-lila-light text-lila-dark border border-lila/30 px-3 py-1.5 rounded-full hover:bg-lila/20 transition-colors"
+              >
+                Admin
+              </button>
+            )}
+            <button
+              onClick={() => router.push("/")}
+              className="text-negro/40 hover:text-negro transition-colors text-sm font-condensed tracking-wide"
+            >
+              ← VOLVER
+            </button>
+          </div>
         </div>
 
         {/* tabs */}

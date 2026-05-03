@@ -15,6 +15,7 @@ export interface ProfileData {
   pais: string | null;
   objetivo: string | null;
   dias_semana: number | null;
+  role: string | null;
 }
 
 export interface PlanResumen {
@@ -30,7 +31,7 @@ export async function getProfile(): Promise<ProfileData | null> {
   if (!session) return null;
   const { data } = await supabase
     .from("profiles")
-    .select("id, nombre, apellidos, email, telefono, fecha_nacimiento, genero, peso_kg, altura_cm, ciudad, pais, objetivo, dias_semana")
+    .select("id, nombre, apellidos, email, telefono, fecha_nacimiento, genero, peso_kg, altura_cm, ciudad, pais, objetivo, dias_semana, role")
     .eq("id", session.user.id)
     .single();
   return data as ProfileData | null;
