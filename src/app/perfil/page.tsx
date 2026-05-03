@@ -412,33 +412,38 @@ export default function PerfilPage() {
 
   return (
     <div className="min-h-screen bg-crema flex flex-col">
-      <div className="max-w-lg mx-auto w-full px-5 py-8 flex-1 flex flex-col">
-
-        {/* header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-condensed text-3xl font-bold text-negro tracking-wide">
-              MI PERFIL
-            </h1>
-            <p className="text-negro/40 text-sm">{profile?.email ?? user.email}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {profile?.role === "admin" && (
-              <button
-                onClick={() => router.push("/admin")}
-                className="font-condensed font-bold text-xs tracking-widest uppercase bg-lila-light text-lila-dark border border-lila/30 px-3 py-1.5 rounded-full hover:bg-lila/20 transition-colors"
-              >
-                Admin
+      {/* Dark hero strip */}
+      <div className="bg-negro px-5 pt-7 pb-8">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-lila rounded-lg flex items-center justify-center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+              </div>
+              <span className="font-condensed font-bold text-white text-base tracking-widest">CAMPO APP</span>
+            </div>
+            <div className="flex items-center gap-3">
+              {profile?.role === "admin" && (
+                <button onClick={() => router.push("/admin")}
+                  className="font-condensed font-bold text-[10px] tracking-widest uppercase bg-lila/20 text-lila border border-lila/30 px-3 py-1.5 rounded-full hover:bg-lila/30 transition-colors">
+                  Admin
+                </button>
+              )}
+              <button onClick={() => router.push("/")}
+                className="text-white/40 hover:text-white transition-colors text-sm font-condensed tracking-wide">
+                ← Volver
               </button>
-            )}
-            <button
-              onClick={() => router.push("/")}
-              className="text-negro/40 hover:text-negro transition-colors text-sm font-condensed tracking-wide"
-            >
-              ← VOLVER
-            </button>
+            </div>
           </div>
+          <h1 className="font-condensed font-bold text-white tracking-tight leading-none mb-1"
+            style={{ fontSize: "clamp(2.5rem, 9vw, 3.5rem)" }}>
+            MI PERFIL
+          </h1>
+          <p className="text-white/35 text-sm">{profile?.email ?? user.email}</p>
         </div>
+      </div>
+
+      <div className="max-w-lg mx-auto w-full px-5 py-6 flex-1 flex flex-col">
 
         {/* tabs */}
         <div className="flex gap-1 mb-6 bg-blanco rounded-xl p-1">
