@@ -10,54 +10,60 @@ const GROQ_TIMEOUT_MS = 60_000;
 const requestSchema = z.object({
   objetivo: z.string().min(1).max(1000),
   volumenCarrera: z.enum(["nada", "menos_20", "20_40", "mas_40"]),
-  lesiones: z.string().max(500),
+  lesiones: z.string().max(500).optional().default(""),
   edad: z.number().min(10).max(99),
   peso: z.number().min(30).max(250),
   diasDisponibles: z.number().min(1).max(7),
   duracionMaxSesion: z.enum(["30min", "45min", "1h", "mas_1h"]),
   lugarEntrenamiento: z.enum(["calle", "pista", "cinta", "campo"]),
-  tieneDispositivo: z.boolean(),
-  otrosDeportes: z.string().max(500),
+  tieneDispositivo: z.boolean().optional().default(false),
+  otrosDeportes: z.string().max(500).optional().default(""),
   preferenciaEntrenamiento: z.enum(["corta_intensa", "larga_suave"]),
 });
 
 // ── Response schema (validates what Groq returns) ─────────────────────────────
 
+// Groq can return numbers or strings interchangeably — handle both
+const strOrNum = z.union([z.string(), z.number()]).transform(String);
+const numOrStr = z.union([z.number(), z.string()]).transform(Number);
+const nullableStrOrNum = z.union([z.string(), z.number(), z.null()]).nullable().optional()
+  .transform(v => (v == null ? null : String(v)));
+
 const ejercicioSchema = z.object({
-  nombre: z.string(),
-  series: z.number().nullable().optional(),
-  repeticiones: z.string().nullable().optional(),
-  duracion: z.string().nullable().optional(),
-  descanso: z.string().nullable().optional(),
-  descripcion: z.string(),
-});
+  nombre: z.string().default(""),
+  series: z.union([z.number(), z.string(), z.null()]).nullable().optional(),
+  repeticiones: nullableStrOrNum,
+  duracion: nullableStrOrNum,
+  descanso: nullableStrOrNum,
+  descripcion: z.string().default(""),
+}).passthrough();
 
 const sesionSchema = z.object({
   dia: z.string(),
-  tipo: z.string(),
-  duracion: z.number(),
-  calentamiento: z.string(),
-  ejercicios: z.array(ejercicioSchema),
-  vueltaCalma: z.string(),
-  consejos: z.string(),
-});
+  tipo: z.string().default(""),
+  duracion: numOrStr.optional().default(30),
+  calentamiento: z.string().default(""),
+  ejercicios: z.array(ejercicioSchema).default([]),
+  vueltaCalma: z.string().default(""),
+  consejos: z.string().default(""),
+}).passthrough();
 
 const semanaSchema = z.object({
-  numero: z.number(),
-  descripcion: z.string(),
-  objetivoSemana: z.string(),
-  sesiones: z.array(sesionSchema),
-});
+  numero: numOrStr,
+  descripcion: z.string().default(""),
+  objetivoSemana: z.string().default(""),
+  sesiones: z.array(sesionSchema).default([]),
+}).passthrough();
 
 const planSchema = z.object({
   titulo: z.string(),
-  objetivo: z.string(),
-  nivel: z.string(),
-  totalSemanas: z.number(),
+  objetivo: strOrNum.optional().default(""),
+  nivel: strOrNum.optional().default(""),
+  totalSemanas: numOrStr,
   semanas: z.array(semanaSchema).min(1),
-  consejosGenerales: z.array(z.string()),
-  nutricion: z.array(z.string()),
-});
+  consejosGenerales: z.array(z.union([z.string(), z.number()]).transform(String)).default([]),
+  nutricion: z.array(z.union([z.string(), z.number()]).transform(String)).default([]),
+}).passthrough();
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -97,6 +103,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
+    console.error("Validation errors:", JSON.stringify(parsed.error.issues, null, 2));
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
@@ -211,7 +218,8 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta:
 
     const validated = planSchema.safeParse(rawPlan);
     if (!validated.success) {
-      console.error("Groq plan failed schema validation");
+      console.error("Plan validation errors:", JSON.stringify(validated.error.issues, null, 2));
+      console.error("Raw plan keys:", Object.keys(rawPlan as object));
       return NextResponse.json({ error: "El plan generado no tiene el formato esperado. Inténtalo de nuevo." }, { status: 500 });
     }
 
